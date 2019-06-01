@@ -31,7 +31,7 @@ make
 ```
 
 3. Run Pytorch/Tensorflow wrapper (integrated with NeuroSim)
-```
+
 
 For the usage of this tool, please refer to the manual.
 
