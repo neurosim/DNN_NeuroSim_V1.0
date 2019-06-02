@@ -41,7 +41,7 @@ For the usage of this tool, please refer to the manual.
 
 
 ## References related to this tool 
-1. https://github.com/neurosim/DNN_NeuroSim_V1.0
+1. github.com/neurosim/DNN_NeuroSim_V1.0
 2. P.-Y. Chen, X. Peng, S. Yu, ※System-level benchmark of synaptic device characteristics for neuro-inspired computing,§ IEEE SOI-3D-Subthreshold Microelectronics Technology Unified Conference (S3S) 2017, San Francisco, USA.
 3. P.-Y. Chen, S. Yu, ※Partition SRAM and RRAM based synaptic arrays for neuro-inspired computing,*§ IEEE International Symposium on Circuits and Systems (ISCAS)*, 2016, Montreal, Canada.
 4. P.-Y. Chen, B. Lin, I.-T. Wang, T.-H. Hou, J. Ye, S. Vrudhula, J.-S. Seo, Y. Cao, and S. Yu, ※Mitigating effects of non-ideal synaptic device characteristics for on-chip learning,*§ IEEE/ACM International Conference on Computer-Aided Design (ICCAD)*, 2015, Austin, TX, USA.
