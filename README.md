@@ -15,8 +15,8 @@ If you have logistic questions or comments on the model, please contact [Prof. S
 
 ## File lists
 1. Manual: `Documents/DNNNeuroSim_Manual.pdf`
-2. DNN_NeuroSim wrapped by Pytorch: 'Inference_pytorch.tar.gz'
-3. DNN_NeuroSim wrapped by Tensorflow: 'Inference_tensorflow.tar.gz'
+2. DNN_NeuroSim wrapped by Pytorch: 'Inference_pytorch'
+3. DNN_NeuroSim wrapped by Tensorflow: 'Inference_tensorflow'
 4. NeuroSim under Pytorch Inference: 'Inference_pytorch/NeuroSIM'
 5. NeuroSim under Tensorflow Inference: 'Inference_tensorflow/source/NeuroSIM'
 
@@ -27,11 +27,7 @@ If you have logistic questions or comments on the model, please contact [Prof. S
 git clone https://github.com/neurosim/DNN_NeuroSim_V1.0.git
 ```
 
-2. Extract framework to its current directory
-```
-tar –zxvf Inference_pytorch.tar.gz 
-tar –zxvf Inference_tensorflow.tar.gz
-```
+2. Train the network to get the model for inference
 
 3. Compile the NeuroSim codes
 ```
