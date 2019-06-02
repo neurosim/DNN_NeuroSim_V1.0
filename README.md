@@ -46,12 +46,9 @@ For the usage of this tool, please refer to the manual.
 3. P.-Y. Chen, S. Yu, ※Partition SRAM and RRAM based synaptic arrays for neuro-inspired computing,*§ IEEE International Symposium on Circuits and Systems (ISCAS)*, 2016, Montreal, Canada.
 4. P.-Y. Chen, B. Lin, I.-T. Wang, T.-H. Hou, J. Ye, S. Vrudhula, J.-S. Seo, Y. Cao, and S. Yu, ※Mitigating effects of non-ideal synaptic device characteristics for on-chip learning,*§ IEEE/ACM International Conference on Computer-Aided Design (ICCAD)*, 2015, Austin, TX, USA.
 5. P.-Y. Chen, D. Kadetotad, Z. Xu, A. Mohanty, B. Lin, J. Ye, S. Vrudhula, J.-S. Seo, Y. Cao, S. Yu, ※Technology-design co-optimization of resistive cross-point array for accelerating learning algorithms on chip,*§ IEEE Design, Automation & Test in Europe (DATE)*, 2015, Grenoble, France.
-6. N. E. Weste, D. Harris, ※CMOS VLSI Design - A Circuit and Systems Perspective, *§ 2007.
-7. X. Peng, R. Liu, S. Yu, ※Optimizing weight mapping and data flow for convolutional neural networks on RRAM based processing-in-memory architecture, *§ IEEE International Symposium on Circuits and Systems (ISCAS), 2019, Sapporo, Japan.
-8. W. Khwa, et al., ※A 65nm 4Kb algorithm-dependent computing-in-memory SRAM unit-macro with 2.3ns and 55.8TOPS/W fully parallel product-sum operation for binary DNN edge processors,*§ IEEE International Solid State Circuits Conference (ISSCC), 2018, San Francisco, USA.
-9. M. Jerry, et al., ※Ferroelectric FET analog synapse for acceleration of deep neural network training,*§ IEEE International Electron Devices Meeting (IEDM), 2017, San Francisco, USA.
-10. X. Sun, et al., ※XNOR-RRAM: A scalable and parallel resistive synaptic architecture for binary neural networks,*§ ACM/IEEE Design, Automation & Test in Europe Conference (DATE), 2018, Dresden.
-11. S. Wu, et al. ※Training and inference with integers in deep neural networks,*§ arXiv: 1802.04680, 2018.
-12. github.com/boluoweifenda/WAGE
-13. github.com/stevenygd/WAGE.pytorch
-14. github.com/aaron-xichen/pytorch-playground
+6. X. Peng, R. Liu, S. Yu, ※Optimizing weight mapping and data flow for convolutional neural networks on RRAM based processing-in-memory architecture, *§ IEEE International Symposium on Circuits and Systems (ISCAS), 2019, Sapporo, Japan.
+7. W. Khwa, et al., ※A 65nm 4Kb algorithm-dependent computing-in-memory SRAM unit-macro with 2.3ns and 55.8TOPS/W fully parallel product-sum operation for binary DNN edge processors,*§ IEEE International Solid State Circuits Conference (ISSCC), 2018, San Francisco, USA.
+8. X. Sun, et al., ※XNOR-RRAM: A scalable and parallel resistive synaptic architecture for binary neural networks,*§ ACM/IEEE Design, Automation & Test in Europe Conference (DATE), 2018, Dresden.
+9. github.com/boluoweifenda/WAGE
+10. github.com/stevenygd/WAGE.pytorch
+11. github.com/aaron-xichen/pytorch-playground
