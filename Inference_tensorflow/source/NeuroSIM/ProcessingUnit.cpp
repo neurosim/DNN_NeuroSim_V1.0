@@ -221,7 +221,7 @@ double ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRow, int n
 	
 	busInput->CalculateArea(1, true); 
 	busOutput->CalculateArea(1, true);	
-	area += subArray->usedArea; // * (numSubArrayRow*numSubArrayCol) + adderTree->area + bufferInput->area + bufferOutput->area;
+	area += subArray->usedArea * (numSubArrayRow*numSubArrayCol) + adderTree->area + bufferInput->area + bufferOutput->area;
 
 	*height = sqrt(area);
 	*width = area/(*height);
@@ -462,7 +462,7 @@ vector<double> GetColumnResistance(const vector<int> &input, const vector<vector
 	
 	for (int j=0; j<weight[0].size(); j++) {
 		int activatedRow = 0;
-		double columnG = 1e-20;
+		double columnG = 1e-9;
 		for (int i=0; i<weight.size(); i++) {
 			if (cell.memCellType == Type::RRAM) {	// eNVM
 				double totalWireResistance;
@@ -475,7 +475,7 @@ vector<double> GetColumnResistance(const vector<int> &input, const vector<vector
 					columnG += weight[i][j] + (double) 1/totalWireResistance;
 					activatedRow += 1 ;
 				} else {
-					columnG += 1e-20;
+					columnG += 1e-9;
 				}
 			} else if (cell.memCellType == Type::FeFET) {
 				double totalWireResistance;
@@ -484,7 +484,7 @@ vector<double> GetColumnResistance(const vector<int> &input, const vector<vector
 					columnG += weight[i][j] + (double) 1/totalWireResistance;
 					activatedRow += 1 ;
 				} else {
-					columnG += 1e-20;
+					columnG += 1e-9;
 				}
 			} else {	
 				// SRAM: weight value do not affect sense energy --> read energy calculated in subArray.cpp (based on wireRes wireCap etc)
@@ -494,7 +494,7 @@ vector<double> GetColumnResistance(const vector<int> &input, const vector<vector
 					columnG += (double) 1.0/totalWireResistance;
 					activatedRow += 1 ;	
 				} else {
-					columnG += 1e-20;
+					columnG += 1e-9;
 				}
 			}
 		}

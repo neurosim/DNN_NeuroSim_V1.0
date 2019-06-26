@@ -135,11 +135,12 @@ void TileInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 }
 
 
-double TileCalculateArea(double numPE, double peSize, double *height, double *width) {
+vector<double> TileCalculateArea(double numPE, double peSize, double *height, double *width) {
 	double area = 0;
 	double PEheight, PEwidth;
 	*height = 0;
 	*width = 0;
+	vector<double> areaResults;
 
 	int numSubArray = ceil((double) peSize/(double) param->numRowSubArray)*ceil((double) peSize/(double) param->numColSubArray);
 	double PEarea = ProcessingUnitCalculateArea(subArrayInPE, ceil((double)sqrt((double)numSubArray)), ceil((double)sqrt((double)numSubArray)), &PEheight, &PEwidth);
@@ -163,7 +164,10 @@ double TileCalculateArea(double numPE, double peSize, double *height, double *wi
 	*height = sqrt(area);
 	*width = area/(*height);
 	
-	return area;
+	areaResults.push_back(area);
+	areaResults.push_back(hTree->area);
+	
+	return areaResults;
 }
 
 

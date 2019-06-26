@@ -381,9 +381,13 @@ void ChipInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 
 
 
-double ChipCalculateArea(InputParameter& inputParameter, Technology& tech, MemCell& cell, double desiredNumTileNM, double numPENM, double desiredPESizeNM, double desiredNumTileCM, double desiredTileSizeCM, 
+vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tech, MemCell& cell, double desiredNumTileNM, double numPENM, double desiredPESizeNM, double desiredNumTileCM, double desiredTileSizeCM, 
 						double desiredPESizeCM, int numTileRow, double *height, double *width, double *CMTileheight, double *CMTilewidth, double *NMTileheight, double *NMTilewidth) {
+	
+	vector<double> areaResults;
+	
 	double area = 0;
+	double areaIC = 0;
 	double NMheight = 0;
 	double NMwidth = 0;
 	double CMheight = 0;
@@ -396,14 +400,23 @@ double ChipCalculateArea(InputParameter& inputParameter, Technology& tech, MemCe
 	*height = 0;
 	*width = 0;
 	
+	vector<double> areaCMTile;
+	vector<double> areaNMTile;
+	
 	if (param->novelMapping) {
-		double NMTileArea = TileCalculateArea(numPENM, desiredPESizeNM, &NMheight, &NMwidth);
+		areaNMTile = TileCalculateArea(numPENM, desiredPESizeNM, &NMheight, &NMwidth);
+		double NMTileArea = areaNMTile[0];
+		double NMTileAreaIC = areaNMTile[1];
 		area += NMTileArea*desiredNumTileNM;
+		areaIC += NMTileAreaIC*desiredNumTileNM;
 		*NMTileheight = NMheight;
 		*NMTilewidth = NMwidth;
 	}
-	double CMTileArea = TileCalculateArea(ceil((double) desiredTileSizeCM/(double) desiredPESizeCM), desiredPESizeCM, &CMheight, &CMwidth);
+	areaCMTile = TileCalculateArea(ceil((double) desiredTileSizeCM/(double) desiredPESizeCM), desiredPESizeCM, &CMheight, &CMwidth);
+	double CMTileArea = areaCMTile[0];
+	double CMTileAreaIC = areaCMTile[1];
 	area += CMTileArea*desiredNumTileCM;
+	areaIC += CMTileAreaIC*desiredNumTileCM;
 	*CMTileheight = CMheight;
 	*CMTilewidth = CMwidth;
 	
@@ -412,6 +425,7 @@ double ChipCalculateArea(InputParameter& inputParameter, Technology& tech, MemCe
 	maxPool->CalculateUnitArea(NONE);
 	maxPool->CalculateArea(globalBuffer->width);
 	Gaccumulation->CalculateArea(NULL, globalBuffer->height/3, NONE);
+	
 	
 	if (param->chipActivation) {
 		if (param->reLu) {
@@ -425,10 +439,14 @@ double ChipCalculateArea(InputParameter& inputParameter, Technology& tech, MemCe
 	}
 	
 	area += globalBuffer->area + GhTree->area + maxPool->area + Gaccumulation->area;
+	areaIC += GhTree->area;
+	areaResults.push_back(area);
+	areaResults.push_back(areaIC);
+	
 	*height = sqrt(area);
 	*width = area/(*height);
 	
-	return area;
+	return areaResults;
 }
 
 

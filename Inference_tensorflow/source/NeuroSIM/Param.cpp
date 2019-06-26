@@ -67,13 +67,13 @@ Param::Param() {
 	deviceroadmap = 1;      	// 1: inputParameter.deviceRoadmap = HP
 								// 2: inputParameter.deviceRoadmap = LSTP
 								
-	globalBufferType = true;   // false: register file
+	globalBufferType = false;   // false: register file
 								// true: SRAM
 								
-	tileBufferType = true;     // false: register file
+	tileBufferType = false;     // false: register file
 								// true: SRAM
 								
-	peBufferType = true;       // false: register file
+	peBufferType = false;       // false: register file
 								// true: SRAM
 	
 	chipActivation = true;      // false: activation (reLu/sigmoid) inside Tile
@@ -103,7 +103,7 @@ Param::Param() {
 	relaxArrayCellHeight = 0;         // relax ArrayCellHeight or not
 	relaxArrayCellWidth = 0;          // relax ArrayCellWidth or not
 	
-	globalBusDelayTolerance = 0.5;
+	globalBusDelayTolerance = 0.1;
 	localBusDelayTolerance = 0.1;
 	treeFoldedRatio = 4;
 	maxGlobalBusWidth = 2048;    // the max buswidth allowed on top-level
@@ -134,10 +134,10 @@ Param::Param() {
 	multifunctional = 0;         // Multifunctional mode (not relevant for IMEC)            
 	parallelWrite = 0;           // Parallel write for crossbar RRAM in neuromorphic mode (not relevant for IMEC)
 	numlut = 32;                 // # of LUT (not relevant for IMEC)
-	numColMuxed = 8;            // How many columns share 1 read circuit (for neuro mode with analog RRAM) or 1 S/A (for memory mode or neuro mode with digital RRAM)
+	numColMuxed = 8;             // How many columns share 1 read circuit (for neuro mode with analog RRAM) or 1 S/A (for memory mode or neuro mode with digital RRAM)
 	numWriteColMuxed = 4;        // How many columns share 1 write column decoder driver (for memory or neuro mode with digital RRAM)
-	levelOutput = 16;            // # of levels of the multilevelSenseAmp output 
-	cellBit = 2;                 // precision of memory device 
+	levelOutput = 16;             // # of levels of the multilevelSenseAmp output 
+	cellBit = 1;                 // precision of memory device 
 	
 	if (memcelltype == 1) {
 		cellBit = 1;             // force cellBit = 1 for all SRAM cases

@@ -45,6 +45,8 @@
 #include <stdlib.h>
 #include <vector>
 #include <sstream>
+#include <chrono>
+#include <algorithm>
 #include "constant.h"
 #include "formula.h"
 #include "Param.h"
@@ -59,6 +61,9 @@ using namespace std;
 vector<vector<double> > getNetStructure(const string &inputfile);
 
 int main(int argc, char * argv[]) {   
+
+	auto start = chrono::high_resolution_clock::now();
+
 	gen.seed(0);
 
 	vector<vector<double> > netStructure;
@@ -103,14 +108,19 @@ int main(int argc, char * argv[]) {
 					&desiredNumTileNM, &desiredPESizeNM, &desiredNumTileCM, &desiredTileSizeCM, &desiredPESizeCM, &numTileRow, &numTileCol);
 	
 	cout << "------------------------------ FloorPlan --------------------------------" <<  endl;
-	
+	cout << endl;
+	cout << "Tile and PE size are optimized to maximize memory utilization ( = memory mapped by synapse / total memory on chip)" << endl;
+	cout << endl;
 	if (!param->novelMapping) {
 		cout << "Desired Conventional Mapped Tile Storage Size: " << desiredTileSizeCM << "x" << desiredTileSizeCM << endl;
+		cout << "Desired Conventional PE Storage Size: " << desiredPESizeCM << "x" << desiredPESizeCM << endl;
 	} else {
 		cout << "Desired Conventional Mapped Tile Storage Size: " << desiredTileSizeCM << "x" << desiredTileSizeCM << endl;
+		cout << "Desired Conventional PE Storage Size: " << desiredPESizeCM << "x" << desiredPESizeCM << endl;
 		cout << "Desired Novel Mapped Tile Storage Size: " << numPENM << "x" << desiredPESizeNM << "x" << desiredPESizeNM << endl;
 	}
-	
+	cout << "User-defined SubArray Size: " << param->numRowSubArray << "x" << param->numColSubArray << endl;
+	cout << endl;
 	cout << "----------------- # of tile used for each layer -----------------" <<  endl;
 	double totalNumTile = 0;
 	for (int i=0; i<netStructure.size(); i++) {
@@ -131,7 +141,7 @@ int main(int argc, char * argv[]) {
 		cout << "layer" << i+1 << ": " << utilizationEachLayer[i][0] << endl;
 		realMappedMemory += numTileEachLayer[0][i] * numTileEachLayer[1][i] * utilizationEachLayer[i][0];
 	}
-	cout << "Memory Utilization of Whole Chip: " << realMappedMemory/totalNumTile << endl;
+	cout << "Memory Utilization of Whole Chip: " << realMappedMemory/totalNumTile*100 << " % " << endl;
 	cout << endl;
 	cout << "---------------------------- FloorPlan Done ------------------------------" <<  endl;
 	cout << endl;
@@ -146,14 +156,20 @@ int main(int argc, char * argv[]) {
 	ChipInitialize(inputParameter, tech, cell, netStructure, markNM, numTileEachLayer,
 					numPENM, desiredNumTileNM, desiredPESizeNM, desiredNumTileCM, desiredTileSizeCM, desiredPESizeCM, numTileRow, numTileCol);
 					
-	double chipHeight, chipWidth, chipArea;
+	double chipHeight, chipWidth, chipArea, chipAreaIC;
 	double CMTileheight = 0;
 	double CMTilewidth = 0;
 	double NMTileheight = 0;
-	double NMTilewidth = 0;;
+	double NMTilewidth = 0;
+	vector<double> chipAreaResults;
 						
-	chipArea = ChipCalculateArea(inputParameter, tech, cell, desiredNumTileNM, numPENM, desiredPESizeNM, desiredNumTileCM, desiredTileSizeCM, desiredPESizeCM, numTileRow, 
+	chipAreaResults = ChipCalculateArea(inputParameter, tech, cell, desiredNumTileNM, numPENM, desiredPESizeNM, desiredNumTileCM, desiredTileSizeCM, desiredPESizeCM, numTileRow, 
 					&chipHeight, &chipWidth, &CMTileheight, &CMTilewidth, &NMTileheight, &NMTilewidth);		
+	chipArea = chipAreaResults[0];
+	chipAreaIC = chipAreaResults[1];
+	
+	cout << "ChipArea : " << chipArea*1e12 << "um^2" << endl;
+	cout << "Total IC Area on chip (Global and Tile/PE local): " << chipAreaIC*1e12 << "um^2" << endl;
 	
 	double chipReadLatency = 0;
 	double chipReadDynamicEnergy = 0;
@@ -209,8 +225,10 @@ int main(int argc, char * argv[]) {
 		chipicLatency += layericLatency;
 		chipicReadDynamicEnergy += layericDynamicEnergy;
 	}
+	
 	cout << "------------------------------ Summary --------------------------------" <<  endl;
 	cout << "ChipArea : " << chipArea*1e12 << "um^2" << endl;
+	cout << "Total IC Area on chip (Global and Tile/PE local): " << chipAreaIC*1e12 << "um^2" << endl;
 	cout << "Chip total readLatency is: " << chipReadLatency*1e9 << "ns" << endl;
 	cout << "Chip total readDynamicEnergy is: " << chipReadDynamicEnergy*1e12 << "pJ" << endl;
 	cout << "Chip total leakage Energy is: " << chipLeakageEnergy*1e12 << "pJ" << endl;
@@ -223,6 +241,12 @@ int main(int argc, char * argv[]) {
 	cout << "Energy Efficiency TOPS/W (Layer-by-Layer Process): " << numComputation/(chipReadDynamicEnergy*1e12+chipLeakageEnergy*1e12) << endl;
 	cout << "Throughput FPS (Layer-by-Layer Process): " << 1/(chipReadLatency) << endl;
 	cout << "-------------------------------------- Hardware Performance Done --------------------------------------" <<  endl;
+	cout << endl;
+	auto stop = chrono::high_resolution_clock::now();
+	auto duration = chrono::duration_cast<chrono::seconds>(stop-start);
+    cout << "------------------------------ Simulation Performance --------------------------------" <<  endl;
+	cout << "Time taken by simulator: " << duration.count() << " seconds" << endl;
+	cout << "------------------------------ Simulation Performance --------------------------------" <<  endl;
 	return 0;
 }
 
