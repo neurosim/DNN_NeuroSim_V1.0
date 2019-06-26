@@ -166,7 +166,7 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
     subArray->clkFreq = param->clkFreq;                       // Clock frequency
 	subArray->relaxArrayCellHeight = param->relaxArrayCellHeight;
 	subArray->relaxArrayCellWidth = param->relaxArrayCellWidth;
-	subArray->numReadPulse = 1;
+	subArray->numReadPulse = param->numBitInput;
 	subArray->avgWeightBit = param->cellBit;
 	subArray->numCellPerSynapse = param->numColPerSynapse;
 	
@@ -209,10 +209,12 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 }
 
 
-double ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRow, int numSubArrayCol, double *height, double *width) {
-	double area = 0;
+vector<double> ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRow, int numSubArrayCol, double *height, double *width, double *bufferArea) {
+	vector<double> areaResults;
 	*height = 0;
 	*width = 0;
+	*bufferArea = 0;
+	double area = 0;
 	
 	subArray->CalculateArea();
 	adderTree->CalculateArea(NULL, subArray->width, NONE);
@@ -226,14 +228,20 @@ double ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRow, int n
 	*height = sqrt(area);
 	*width = area/(*height);
 	
-	return area;
+	areaResults.push_back(area);
+	areaResults.push_back(subArray->areaADC*(numSubArrayRow*numSubArrayCol));
+	areaResults.push_back(subArray->areaAccum*(numSubArrayRow*numSubArrayCol)+adderTree->area);
+	areaResults.push_back(subArray->areaOther*(numSubArrayRow*numSubArrayCol)+ bufferInput->area + bufferOutput->area);
+	
+	return areaResults;
 }
 
 
 double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, 
 											const vector<vector<int> > &inputVector, int arrayDupRow, int arrayDupCol, int numSubArrayRow, int numSubArrayCol, int weightMatrixRow,
 											int weightMatrixCol, int numInVector, MemCell& cell, double *readLatency, double *readDynamicEnergy, double *leakage, 
-											double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy) {
+											double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy,
+											double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther) {
 	
 	/*** define how many subArray are used to map the whole layer ***/
 	*readLatency = 0;
@@ -243,10 +251,19 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 	*bufferDynamicEnergy = 0;
 	*icLatency = 0;
 	*icDynamicEnergy = 0;
+	*coreEnergyADC = 0;
+	*coreEnergyAccum = 0;
+	*coreEnergyOther = 0;
+	*coreLatencyADC = 0;
+	*coreLatencyAccum = 0;
+	*coreLatencyOther = 0;
 	
 	double subArrayReadLatency = 0;
 	double subArrayReadDynamicEnergy = 0;
-	double subArrayLeakage = 0;		
+	double subArrayLeakage = 0;	
+	double subArrayLatencyADC = 0;
+	double subArrayLatencyAccum = 0;
+	double subArrayLatencyOther = 0;
 
 	if (arrayDupRow*arrayDupCol > 1) {
 		// weight matrix is duplicated among subArray
@@ -285,19 +302,37 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 							subArray->CalculatePower(columnResistance);
 							
 							subArrayReadLatency += subArray->readLatency;
-							subArrayReadDynamicEnergy += subArray->readDynamicEnergy;
-							subArrayLeakage = subArray->leakage;							
+							*readDynamicEnergy += subArray->readDynamicEnergy;
+							subArrayLeakage = subArray->leakage;
+
+							subArrayLatencyADC += subArray->readLatencyADC;
+							subArrayLatencyAccum += subArray->readLatencyAccum;
+							subArrayLatencyOther += subArray->readLatencyOther;
+							
+							*coreEnergyADC += subArray->readDynamicEnergyADC;
+							*coreEnergyAccum += subArray->readDynamicEnergyAccum;
+							*coreEnergyOther += subArray->readDynamicEnergyOther;
 						}	
 						adderTree->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
 						adderTree->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 						
 						*readLatency = max(subArrayReadLatency + adderTree->readLatency, (*readLatency));
-						*readDynamicEnergy += subArrayReadDynamicEnergy + adderTree->readDynamicEnergy;
+						*readDynamicEnergy += adderTree->readDynamicEnergy;
+						
+						*coreLatencyADC = MAX(subArrayLatencyADC, (*coreLatencyADC));
+						*coreLatencyAccum = MAX(subArrayLatencyAccum + adderTree->readLatency, (*coreLatencyAccum));
+						*coreLatencyOther = MAX(subArrayLatencyOther, (*coreLatencyOther));
+						
+						*coreEnergyAccum += adderTree->readDynamicEnergy;
 					}
 				}
 			}
 			// considering speedup, the latency of processing each layer is decreased
 			*readLatency = (*readLatency)/(arrayDupRow*arrayDupCol);
+			
+			*coreLatencyADC = (*coreLatencyADC)/(arrayDupRow*arrayDupCol);
+			*coreLatencyAccum = (*coreLatencyAccum)/(arrayDupRow*arrayDupCol);
+			*coreLatencyOther = (*coreLatencyOther)/(arrayDupRow*arrayDupCol);
 		} else {
 			// assign weight and input to specific subArray
 			vector<vector<double> > subArrayMemory;
@@ -325,12 +360,24 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 				subArray->CalculatePower(columnResistance);
 				
 				subArrayReadLatency += subArray->readLatency;
-				subArrayReadDynamicEnergy += subArray->readDynamicEnergy;
+				*readDynamicEnergy += subArray->readDynamicEnergy;
 				subArrayLeakage = subArray->leakage;
+				
+				subArrayLatencyADC += subArray->readLatencyADC;
+				subArrayLatencyAccum += subArray->readLatencyAccum;
+				subArrayLatencyOther += subArray->readLatencyOther;
+				
+				*coreEnergyADC += subArray->readDynamicEnergyADC;
+				*coreEnergyAccum += subArray->readDynamicEnergyAccum;
+				*coreEnergyOther += subArray->readDynamicEnergyOther;
 			}
 			// do not pass adderTree 
 			*readLatency = subArrayReadLatency/(arrayDupRow*arrayDupCol);
-			*readDynamicEnergy = subArrayReadDynamicEnergy;
+			//*readDynamicEnergy = subArrayReadDynamicEnergy;
+			
+			*coreLatencyADC = subArrayLatencyADC/(arrayDupRow*arrayDupCol);
+			*coreLatencyAccum = subArrayLatencyAccum/(arrayDupRow*arrayDupCol);
+			*coreLatencyOther = subArrayLatencyOther/(arrayDupRow*arrayDupCol);
 		}
 	} else {
 		// weight matrix is further partitioned inside PE (among subArray) --> no duplicated
@@ -365,14 +412,28 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 						subArray->CalculatePower(columnResistance);
 						
 						subArrayReadLatency += subArray->readLatency;
-						subArrayReadDynamicEnergy += subArray->readDynamicEnergy;
+						*readDynamicEnergy += subArray->readDynamicEnergy;
 						subArrayLeakage = subArray->leakage;
+						
+						subArrayLatencyADC += subArray->readLatencyADC;
+						subArrayLatencyAccum += subArray->readLatencyAccum;
+						subArrayLatencyOther += subArray->readLatencyOther;
+						
+						*coreEnergyADC += subArray->readDynamicEnergyADC;
+						*coreEnergyAccum += subArray->readDynamicEnergyAccum;
+						*coreEnergyOther += subArray->readDynamicEnergyOther;
 					}
 					adderTree->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
 					adderTree->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 
 					*readLatency = max(subArrayReadLatency + adderTree->readLatency, (*readLatency));
-					*readDynamicEnergy += subArrayReadDynamicEnergy + adderTree->readDynamicEnergy;
+					*readDynamicEnergy += adderTree->readDynamicEnergy;
+					
+					*coreLatencyADC = MAX(subArrayLatencyADC, (*coreLatencyADC));
+					*coreLatencyAccum = MAX(subArrayLatencyAccum + adderTree->readLatency, (*coreLatencyAccum));
+					*coreLatencyOther = MAX(subArrayLatencyOther, (*coreLatencyOther));
+					
+					*coreEnergyAccum += adderTree->readDynamicEnergy;
 				}
 			}
 		}
@@ -400,6 +461,10 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 	*readLatency += (*bufferLatency) + (*icLatency);
 	*readDynamicEnergy += (*bufferDynamicEnergy) + (*icDynamicEnergy);
 	*leakage = subArrayLeakage*numSubArrayRow*numSubArrayCol + adderTree->leakage + bufferInput->leakage + bufferOutput->leakage;
+	
+	*coreLatencyOther += (*bufferLatency) + (*icLatency);
+	*coreEnergyOther += (*bufferDynamicEnergy) + (*icDynamicEnergy);
+	
 	// TODO: Training
 	
 }

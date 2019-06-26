@@ -156,7 +156,7 @@ int main(int argc, char * argv[]) {
 	ChipInitialize(inputParameter, tech, cell, netStructure, markNM, numTileEachLayer,
 					numPENM, desiredNumTileNM, desiredPESizeNM, desiredNumTileCM, desiredTileSizeCM, desiredPESizeCM, numTileRow, numTileCol);
 					
-	double chipHeight, chipWidth, chipArea, chipAreaIC;
+	double chipHeight, chipWidth, chipArea, chipAreaIC, chipAreaADC, chipAreaAccum, chipAreaOther;
 	double CMTileheight = 0;
 	double CMTilewidth = 0;
 	double NMTileheight = 0;
@@ -167,10 +167,10 @@ int main(int argc, char * argv[]) {
 					&chipHeight, &chipWidth, &CMTileheight, &CMTilewidth, &NMTileheight, &NMTilewidth);		
 	chipArea = chipAreaResults[0];
 	chipAreaIC = chipAreaResults[1];
-	
-	cout << "ChipArea : " << chipArea*1e12 << "um^2" << endl;
-	cout << "Total IC Area on chip (Global and Tile/PE local): " << chipAreaIC*1e12 << "um^2" << endl;
-	
+	chipAreaADC = chipAreaResults[2];
+	chipAreaAccum = chipAreaResults[3];
+	chipAreaOther = chipAreaResults[4];
+
 	double chipReadLatency = 0;
 	double chipReadDynamicEnergy = 0;
 	double chipLeakageEnergy = 0;
@@ -180,6 +180,13 @@ int main(int argc, char * argv[]) {
 	double chipicLatency = 0;
 	double chipicReadDynamicEnergy = 0;
 	
+	double chipLatencyADC = 0;
+	double chipLatencyAccum = 0;
+	double chipLatencyOther = 0;
+	double chipEnergyADC = 0;
+	double chipEnergyAccum = 0;
+	double chipEnergyOther = 0;
+	
 	double layerReadLatency = 0;
 	double layerReadDynamicEnergy = 0;
 	double tileLeakage = 0;
@@ -187,6 +194,13 @@ int main(int argc, char * argv[]) {
 	double layerbufferDynamicEnergy = 0;
 	double layericLatency = 0;
 	double layericDynamicEnergy = 0;
+	
+	double coreLatencyADC = 0;
+	double coreLatencyAccum = 0;
+	double coreLatencyOther = 0;
+	double coreEnergyADC = 0;
+	double coreEnergyAccum = 0;
+	double coreEnergyOther = 0;
 	
 	cout << "-------------------------------------- Hardware Performance --------------------------------------" <<  endl;
 	
@@ -197,7 +211,8 @@ int main(int argc, char * argv[]) {
 		ChipCalculatePerformance(cell, i, argv[2*i+4], argv[2*i+4], argv[2*i+5], netStructure[i][6],  
 					netStructure, markNM, numTileEachLayer, utilizationEachLayer, speedUpEachLayer, tileLocaEachLayer,
 					numPENM, desiredPESizeNM, desiredTileSizeCM, desiredPESizeCM, CMTileheight, CMTilewidth, NMTileheight, NMTilewidth,
-					&layerReadLatency, &layerReadDynamicEnergy, &tileLeakage, &layerbufferLatency, &layerbufferDynamicEnergy, &layericLatency, &layericDynamicEnergy);
+					&layerReadLatency, &layerReadDynamicEnergy, &tileLeakage, &layerbufferLatency, &layerbufferDynamicEnergy, &layericLatency, &layericDynamicEnergy,
+					&coreLatencyADC, &coreLatencyAccum, &coreLatencyOther, &coreEnergyADC, &coreEnergyAccum, &coreEnergyOther);
 		
 		double numTileOtherLayer = 0;
 		double layerLeakageEnergy = 0;		
@@ -215,6 +230,18 @@ int main(int argc, char * argv[]) {
 		cout << "layer" << i+1 << "'s buffer readDynamicEnergy is: " << layerbufferDynamicEnergy*1e12 << "pJ" << endl;
 		cout << "layer" << i+1 << "'s ic latency is: " << layericLatency*1e9 << "ns" << endl;
 		cout << "layer" << i+1 << "'s ic readDynamicEnergy is: " << layericDynamicEnergy*1e12 << "pJ" << endl;
+		cout << endl;
+		cout << "************************ Breakdown of Latency and Dynamic Energy *************************" << endl;
+		cout << endl;
+		cout << "----------- ADC (or S/As and precharger for SRAM) readLatency is : " << coreLatencyADC*1e9 << "ns" << endl;
+		cout << "----------- Accumulation Circuits (subarray level: adders, shiftAdds; PE/Tile/Global level: accumulation units) readLatency is : " << coreLatencyAccum*1e9 << "ns" << endl;
+		cout << "----------- Other Peripheries (e.g. decoders, mux, switchmatrix, buffers, IC, pooling and activation units) readLatency is : " << coreLatencyOther*1e9 << "ns" << endl;
+		cout << "----------- ADC (or S/As and precharger for SRAM) readLatency is : " << coreEnergyADC*1e12 << "pJ" << endl;
+		cout << "----------- Accumulation Circuits (subarray level: adders, shiftAdds; PE/Tile/Global level: accumulation units) readLatency is : " << coreEnergyAccum*1e12 << "pJ" << endl;
+		cout << "----------- Other Peripheries (e.g. decoders, mux, switchmatrix, buffers, IC, pooling and activation units) readLatency is : " << coreEnergyOther*1e12 << "pJ" << endl;
+		cout << endl;
+		cout << "************************ Breakdown of Latency and Dynamic Energy *************************" << endl;
+		cout << endl;
 		
 		chipReadLatency += layerReadLatency;
 		chipReadDynamicEnergy += layerReadDynamicEnergy;
@@ -224,11 +251,23 @@ int main(int argc, char * argv[]) {
 		chipbufferReadDynamicEnergy += layerbufferDynamicEnergy;
 		chipicLatency += layericLatency;
 		chipicReadDynamicEnergy += layericDynamicEnergy;
+		
+		chipLatencyADC += coreLatencyADC;
+		chipLatencyAccum += coreLatencyAccum;
+		chipLatencyOther += coreLatencyOther;
+		chipEnergyADC += coreEnergyADC;
+		chipEnergyAccum += coreEnergyAccum;
+		chipEnergyOther += coreEnergyOther;
 	}
 	
 	cout << "------------------------------ Summary --------------------------------" <<  endl;
+	cout << endl;
 	cout << "ChipArea : " << chipArea*1e12 << "um^2" << endl;
 	cout << "Total IC Area on chip (Global and Tile/PE local): " << chipAreaIC*1e12 << "um^2" << endl;
+	cout << "Total ADC (or S/As and precharger for SRAM) Area on chip : " << chipAreaADC*1e12 << "um^2" << endl;
+	cout << "Total Accumulation Circuits (subarray level: adders, shiftAdds; PE/Tile/Global level: accumulation units) on chip : " << chipAreaAccum*1e12 << "um^2" << endl;
+	cout << "Other Peripheries (e.g. decoders, mux, switchmatrix, buffers, IC, pooling and activation units) : " << chipAreaOther*1e12 << "um^2" << endl;
+	cout << endl;
 	cout << "Chip total readLatency is: " << chipReadLatency*1e9 << "ns" << endl;
 	cout << "Chip total readDynamicEnergy is: " << chipReadDynamicEnergy*1e12 << "pJ" << endl;
 	cout << "Chip total leakage Energy is: " << chipLeakageEnergy*1e12 << "pJ" << endl;
@@ -236,6 +275,18 @@ int main(int argc, char * argv[]) {
 	cout << "Chip buffer readDynamicEnergy is: " << chipbufferReadDynamicEnergy*1e12 << "pJ" << endl;
 	cout << "Chip ic readLatency is: " << chipicLatency*1e9 << "ns" << endl;
 	cout << "Chip ic readDynamicEnergy is: " << chipicReadDynamicEnergy*1e12 << "pJ" << endl;
+	cout << endl;
+	cout << "************************ Breakdown of Latency and Dynamic Energy *************************" << endl;
+	cout << endl;
+	cout << "----------- ADC (or S/As and precharger for SRAM) readLatency is : " << chipLatencyADC*1e9 << "ns" << endl;
+	cout << "----------- Accumulation Circuits (subarray level: adders, shiftAdds; PE/Tile/Global level: accumulation units) readLatency is : " << chipLatencyAccum*1e9 << "ns" << endl;
+	cout << "----------- Other Peripheries (e.g. decoders, mux, switchmatrix, buffers, IC, pooling and activation units) readLatency is : " << chipLatencyOther*1e9 << "ns" << endl;
+	cout << "----------- ADC (or S/As and precharger for SRAM) readLatency is : " << chipEnergyADC*1e12 << "pJ" << endl;
+	cout << "----------- Accumulation Circuits (subarray level: adders, shiftAdds; PE/Tile/Global level: accumulation units) readLatency is : " << chipEnergyAccum*1e12 << "pJ" << endl;
+	cout << "----------- Other Peripheries (e.g. decoders, mux, switchmatrix, buffers, IC, pooling and activation units) readLatency is : " << chipEnergyOther*1e12 << "pJ" << endl;
+	cout << endl;
+	cout << "************************ Breakdown of Latency and Dynamic Energy *************************" << endl;
+	cout << endl;
 	cout << endl;
 	cout << "----------------------------- Performance -------------------------------" << endl;
 	cout << "Energy Efficiency TOPS/W (Layer-by-Layer Process): " << numComputation/(chipReadDynamicEnergy*1e12+chipLeakageEnergy*1e12) << endl;
@@ -245,41 +296,40 @@ int main(int argc, char * argv[]) {
 	auto stop = chrono::high_resolution_clock::now();
 	auto duration = chrono::duration_cast<chrono::seconds>(stop-start);
     cout << "------------------------------ Simulation Performance --------------------------------" <<  endl;
-	cout << "Time taken by simulator: " << duration.count() << " seconds" << endl;
+	cout << "Total Run-time of NeuroSim: " << duration.count() << " seconds" << endl;
 	cout << "------------------------------ Simulation Performance --------------------------------" <<  endl;
 	return 0;
 }
 
 vector<vector<double> > getNetStructure(const string &inputfile) {
-	ifstream infile(inputfile.c_str());      // read the input file ...
+	ifstream infile(inputfile.c_str());      
 	string inputline;
 	string inputval;
 
-	int ROWin=0, COLin=0;      // initialize the number of rows and columns ...
-	if (!infile.good()) {        // check if the file is opened successfully 
+	int ROWin=0, COLin=0;      
+	if (!infile.good()) {        
 		cerr << "Error: the input file cannot be opened!" << endl;
 		exit(1);
 	}else{
-		while (getline(infile, inputline, '\n')) {       // at every end of each row ...
-			ROWin++;                                // count the number of rows ...
+		while (getline(infile, inputline, '\n')) {       
+			ROWin++;                                
 		}
 		infile.clear();
-		infile.seekg(0, ios::beg);      // back to the begining of the file ...
-		if (getline(infile, inputline, '\n')) {        // get a single row of the file ...
-			istringstream iss (inputline);      // copy row values 
-			while (getline(iss, inputval, ',')) {       // count the number of columns ...
+		infile.seekg(0, ios::beg);      
+		if (getline(infile, inputline, '\n')) {        
+			istringstream iss (inputline);      
+			while (getline(iss, inputval, ',')) {       
 				COLin++;
 			}
 		}	
 	}
 	infile.clear();
-	infile.seekg(0, ios::beg);          // back to the begining of the file ...
+	infile.seekg(0, ios::beg);          
 
-	vector<vector<double> > netStructure;               // original data
-	// load the data into inputvector ...
+	vector<vector<double> > netStructure;               
 	for (int row=0; row<ROWin; row++) {	
 		vector<double> netStructurerow;
-		getline(infile, inputline, '\n');             // get one row of input string file ...
+		getline(infile, inputline, '\n');             
 		istringstream iss;
 		iss.str(inputline);
 		for (int col=0; col<COLin; col++) {       
@@ -293,7 +343,6 @@ vector<vector<double> > getNetStructure(const string &inputfile) {
 		}		
 		netStructure.push_back(netStructurerow);
 	}
-	// close the input file ...
 	infile.close();
 	
 	return netStructure;
