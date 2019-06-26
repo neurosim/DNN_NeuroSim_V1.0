@@ -112,8 +112,8 @@ int main(int argc, char * argv[]) {
 	cout << "Tile and PE size are optimized to maximize memory utilization ( = memory mapped by synapse / total memory on chip)" << endl;
 	cout << endl;
 	if (!param->novelMapping) {
-		cout << "Desired Conventional Mapped Tile Storage Size: " << desiredTileSizeCM << "x" << desiredTileSizeCM << endl;
-		cout << "Desired Conventional PE Storage Size: " << desiredPESizeCM << "x" << desiredPESizeCM << endl;
+		cout << "Desired Conventional Mapped Tile Memory Matrix Size: " << desiredTileSizeCM << "x" << desiredTileSizeCM << endl;
+		cout << "Desired Conventional PE Memory Matrix Size: " << desiredPESizeCM << "x" << desiredPESizeCM << endl;
 	} else {
 		cout << "Desired Conventional Mapped Tile Storage Size: " << desiredTileSizeCM << "x" << desiredTileSizeCM << endl;
 		cout << "Desired Conventional PE Storage Size: " << desiredPESizeCM << "x" << desiredPESizeCM << endl;
