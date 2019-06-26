@@ -45,11 +45,12 @@
  
 /*** Functions ***/
 void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParameter, Technology& tech, MemCell& cell, int subArrayRowSize, int _numSubArrayCol);
-double ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRow, int numSubArrayCol, double *height, double *width);
+vector<double> ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRow, int numSubArrayCol, double *height, double *width, double *bufferArea);
 double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, const vector<vector<int> > &inputVector, 
 										int arrayDupRow, int arrayDupCol, int numSubArrayRow, int numSubArrayCol, int weightMatrixRow, int weightMatrixCol, 
 										int numInVector, MemCell& cell, double *readLatency, double *readDynamicEnergy, double *leakage, 
-										double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy);
+										double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy,
+										double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther);
 
 vector<vector<double> > CopySubArray(const vector<vector<double> > &orginal, int positionRow, int positionCol, int numRow, int numCol);
 vector<vector<int> > CopySubInput(const vector<vector<int> > &orginal, int positionRow, int numInputVector, int numRow);

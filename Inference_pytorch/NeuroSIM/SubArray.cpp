@@ -347,6 +347,10 @@ void SubArray::CalculateArea() {  //calculate layout area for total design
 				area = height * width;
 				usedArea = areaArray + wlDecoder.area + precharger.area + sramWriteDriver.area + senseAmp.area + adder.area + dff.area + shiftAdd.area;
 				emptyArea = area - usedArea;
+				
+				areaADC = senseAmp.area + precharger.area;
+				areaAccum = adder.area + dff.area + shiftAdd.area;
+				areaOther = wlDecoder.area + sramWriteDriver.area;
 			} else if (conventionalParallel) { 
 				wlSwitchMatrix.CalculateArea(heightArray, NULL, NONE);
 				multilevelSenseAmp.CalculateArea(NULL, widthArray, NONE);
@@ -359,6 +363,10 @@ void SubArray::CalculateArea() {  //calculate layout area for total design
 				area = height * width;
 				usedArea = areaArray + wlDecoder.area + precharger.area + sramWriteDriver.area + multilevelSenseAmp.area + multilevelSAEncoder.area + shiftAdd.area;
 				emptyArea = area - usedArea;
+				
+				areaADC = multilevelSenseAmp.area + precharger.area + multilevelSAEncoder.area;
+				areaAccum = shiftAdd.area;
+				areaOther = wlSwitchMatrix.area + sramWriteDriver.area;
 			} else if (BNNsequentialMode || XNORsequentialMode) {
 				wlDecoder.CalculateArea(heightArray, NULL, NONE);  
 				senseAmp.CalculateArea(NULL, widthArray, MAGIC);
@@ -426,6 +434,10 @@ void SubArray::CalculateArea() {  //calculate layout area for total design
 				area = height * width;
 				usedArea = areaArray + wlDecoder.area + wlDecoderDriver.area + wlNewDecoderDriver.area + slSwitchMatrix.area + mux.area + multilevelSenseAmp.area + multilevelSAEncoder.area + muxDecoder.area + adder.area + dff.area + shiftAdd.area;
 				emptyArea = area - usedArea;
+				
+				areaADC = multilevelSenseAmp.area + multilevelSAEncoder.area;
+				areaAccum = adder.area + dff.area + shiftAdd.area;
+				areaOther = wlDecoder.area + wlNewDecoderDriver.area + wlDecoderDriver.area + slSwitchMatrix.area + mux.area + muxDecoder.area;
 			} else if (conventionalParallel) { 
 				if (cell.accessType == CMOS_access) {
 					wlNewSwitchMatrix.CalculateArea(heightArray, NULL, NONE);
@@ -450,6 +462,10 @@ void SubArray::CalculateArea() {  //calculate layout area for total design
 				area = height * width;
 				usedArea = areaArray + wlSwitchMatrix.area + wlNewSwitchMatrix.area + slSwitchMatrix.area + mux.area + multilevelSenseAmp.area + muxDecoder.area + multilevelSAEncoder.area + shiftAdd.area;
 				emptyArea = area - usedArea;
+				
+				areaADC = multilevelSenseAmp.area + multilevelSAEncoder.area;
+				areaAccum = shiftAdd.area;
+				areaOther = wlNewSwitchMatrix.area + wlSwitchMatrix.area + slSwitchMatrix.area + mux.area + muxDecoder.area;
 			} else if (BNNsequentialMode || XNORsequentialMode) {       
 				wlDecoder.CalculateArea(heightArray, NULL, NONE);
 				if (cell.accessType == CMOS_access) {
@@ -562,6 +578,10 @@ void SubArray::CalculateLatency(double _rampInput, const vector<double> &columnR
 				readLatency += dff.readLatency;
 				readLatency += shiftAdd.readLatency;
 				
+				readLatencyADC = precharger.readLatency + colDelay + senseAmp.readLatency;
+				readLatencyAccum = adder.readLatency + dff.readLatency + shiftAdd.readLatency;
+				readLatencyOther = wlDecoder.readLatency;
+				
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
 				double resPull;
 				resPull = (CalculateOnResistance(cell.widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech) + CalculateOnResistance(cell.widthSRAMCellPMOS * tech.featureSize, PMOS, inputParameter.temperature, tech)) / 2;    // take average
@@ -601,6 +621,10 @@ void SubArray::CalculateLatency(double _rampInput, const vector<double> &columnR
 				readLatency += multilevelSenseAmp.readLatency;
 				readLatency += multilevelSAEncoder.readLatency;
 				readLatency += shiftAdd.readLatency;
+				
+				readLatencyADC = precharger.readLatency + colDelay + multilevelSenseAmp.readLatency + multilevelSAEncoder.readLatency;
+				readLatencyAccum = shiftAdd.readLatency;
+				readLatencyOther = wlSwitchMatrix.readLatency;
 
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
 				double resPull;
@@ -765,6 +789,10 @@ void SubArray::CalculateLatency(double _rampInput, const vector<double> &columnR
 				readLatency += dff.readLatency;
 				readLatency += shiftAdd.readLatency;
 				
+				readLatencyADC = multilevelSenseAmp.readLatency + multilevelSAEncoder.readLatency;
+				readLatencyAccum = adder.readLatency + dff.readLatency + shiftAdd.readLatency;
+				readLatencyOther = MAX(wlDecoder.readLatency + wlNewDecoderDriver.readLatency + wlDecoderDriver.readLatency, muxDecoder.readLatency + mux.readLatency);
+				
 				// Write
 				writeLatency = 0;
 				writeLatencyArray = 0;
@@ -799,6 +827,10 @@ void SubArray::CalculateLatency(double _rampInput, const vector<double> &columnR
 				readLatency += multilevelSenseAmp.readLatency;
 				readLatency += multilevelSAEncoder.readLatency;
 				readLatency += shiftAdd.readLatency;
+				
+				readLatencyADC = multilevelSenseAmp.readLatency + multilevelSAEncoder.readLatency;
+				readLatencyAccum = shiftAdd.readLatency;
+				readLatencyOther = MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, muxDecoder.readLatency + mux.readLatency);
 
 				// Write
 				writeLatency = 0;
@@ -960,6 +992,10 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += dff.readDynamicEnergy;
 				readDynamicEnergy += senseAmp.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
+				
+				readDynamicEnergyADC = precharger.readDynamicEnergy + readDynamicEnergyArray + senseAmp.readDynamicEnergy;
+				readDynamicEnergyAccum = adder.readDynamicEnergy + dff.readDynamicEnergy + shiftAdd.readDynamicEnergy;
+				readDynamicEnergyOther = wlDecoder.readDynamicEnergy;
 
 				// Write
 				writeDynamicEnergy += wlDecoder.writeDynamicEnergy;
@@ -997,6 +1033,10 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += multilevelSAEncoder.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
 
+				readDynamicEnergyADC = precharger.readDynamicEnergy + readDynamicEnergyArray + multilevelSenseAmp.readDynamicEnergy + multilevelSAEncoder.readDynamicEnergy;
+				readDynamicEnergyAccum = shiftAdd.readDynamicEnergy;
+				readDynamicEnergyOther = wlSwitchMatrix.readDynamicEnergy;
+				
 				// Write
 				writeDynamicEnergy += wlSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += precharger.writeDynamicEnergy;
@@ -1153,6 +1193,10 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += dff.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
 				readDynamicEnergy += readDynamicEnergyArray;
+				
+				readDynamicEnergyADC = readDynamicEnergyArray + rowCurrentSenseAmp.readDynamicEnergy;
+				readDynamicEnergyAccum = adder.readDynamicEnergy + dff.readDynamicEnergy + shiftAdd.readDynamicEnergy;
+				readDynamicEnergyOther = wlDecoder.readDynamicEnergy + wlNewDecoderDriver.readDynamicEnergy + wlDecoderDriver.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
 
 				// Write
 				writeDynamicEnergyArray = writeDynamicEnergyArray;
@@ -1211,6 +1255,10 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += multilevelSAEncoder.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
 				readDynamicEnergy += readDynamicEnergyArray;
+				
+				readDynamicEnergyADC = readDynamicEnergyArray + multilevelSenseAmp.readDynamicEnergy + multilevelSAEncoder.readDynamicEnergy;
+				readDynamicEnergyAccum = shiftAdd.readDynamicEnergy;
+				readDynamicEnergyOther = wlNewSwitchMatrix.readDynamicEnergy + wlSwitchMatrix.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
 				
 				// Write
 				writeDynamicEnergyArray = writeDynamicEnergyArray;
