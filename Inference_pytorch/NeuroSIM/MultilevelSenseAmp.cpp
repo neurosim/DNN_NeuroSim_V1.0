@@ -131,8 +131,8 @@ void MultilevelSenseAmp::CalculateLatency(const vector<double> &columnResistance
 				LatencyCol = max(LatencyCol, T_Col);
 				if (LatencyCol < 1e-9) {
 					LatencyCol = 1e-9;
-				} else if (LatencyCol > 20e-9) {
-					LatencyCol = 20e-9;
+				} else if (LatencyCol > 10e-9) {
+					LatencyCol = 10e-9;
 				}
 			}
 			readLatency += LatencyCol;
