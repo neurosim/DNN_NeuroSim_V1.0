@@ -121,11 +121,9 @@ void MultilevelSenseAmp::CalculateLatency(const vector<double> &columnResistance
 	} else {
 		readLatency = 0;
 		
-		double Group = numCol/numColMuxed;
-		
-		for (double i=0; i<Group; i++) {
+		for (double i=0; i<numColMuxed; i++) {
 			double LatencyCol = 0;
-			for (double j=0; j<numColMuxed; j++){
+			for (double j=0; j<numCol; j++){
 				double T_Col = 0;
 				T_Col = GetColumnLatency(columnResistance[i*numColMuxed+j]);
 				LatencyCol = max(LatencyCol, T_Col);
