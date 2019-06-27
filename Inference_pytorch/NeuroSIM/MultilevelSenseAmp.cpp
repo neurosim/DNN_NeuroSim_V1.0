@@ -281,8 +281,8 @@ double MultilevelSenseAmp::GetColumnPower(double columnRes) {
 		}
 	}
 	
-	if (Column_Power > 1e-4) {
-		Column_Power = 1e-4;
+	if (Column_Power > 1e-6) {
+		Column_Power = 1e-6;
 	}
 	
 	return Column_Power;
