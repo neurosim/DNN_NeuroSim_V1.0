@@ -265,7 +265,9 @@ double CurrentSenseAmp::GetColumnPower(double columnRes) {
 			Column_Power = (0.0516*log(columnRes/1000.0)+3.2349)*1e-6;
 		}
 	}
-	
+	if (Column_Power > 1e-4) {
+		Column_Power = 1e-4;
+	}
 	return Column_Power;
 	
 }
