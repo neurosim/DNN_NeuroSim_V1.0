@@ -524,7 +524,7 @@ vector<int> GetInputVector(const vector<vector<int> > &input, int numInput, doub
 vector<double> GetColumnResistance(const vector<int> &input, const vector<vector<double> > &weight, MemCell& cell, bool parallelRead) {
 	vector<double> resistance;
 	vector<double> conductance;
-	double columnG = 1/minConductance;
+	double columnG = param->minConductance;
 	
 	for (int j=0; j<weight[0].size(); j++) {
 		int activatedRow = 0;
