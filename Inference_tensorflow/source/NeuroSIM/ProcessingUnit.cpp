@@ -524,10 +524,10 @@ vector<int> GetInputVector(const vector<vector<int> > &input, int numInput, doub
 vector<double> GetColumnResistance(const vector<int> &input, const vector<vector<double> > &weight, MemCell& cell, bool parallelRead) {
 	vector<double> resistance;
 	vector<double> conductance;
+	double columnG = 1/minConductance;
 	
 	for (int j=0; j<weight[0].size(); j++) {
 		int activatedRow = 0;
-		double columnG = 1e-9;
 		for (int i=0; i<weight.size(); i++) {
 			if (cell.memCellType == Type::RRAM) {	// eNVM
 				double totalWireResistance;
@@ -539,18 +539,14 @@ vector<double> GetColumnResistance(const vector<int> &input, const vector<vector
 				if (input[i] == 1) {
 					columnG += weight[i][j] + (double) 1/totalWireResistance;
 					activatedRow += 1 ;
-				} else {
-					columnG += 1e-9;
-				}
+				} 
 			} else if (cell.memCellType == Type::FeFET) {
 				double totalWireResistance;
 				totalWireResistance = (j + 1) * param->wireResistanceRow + (weight.size() - i) * param->wireResistanceCol;
 				if (input[i] == 1) {
 					columnG += weight[i][j] + (double) 1/totalWireResistance;
 					activatedRow += 1 ;
-				} else {
-					columnG += 1e-9;
-				}
+				} 
 			} else {	
 				// SRAM: weight value do not affect sense energy --> read energy calculated in subArray.cpp (based on wireRes wireCap etc)
 				double totalWireResistance;
