@@ -554,13 +554,8 @@ vector<double> GetColumnResistance(const vector<int> &input, const vector<vector
 			} else {	
 				// SRAM: weight value do not affect sense energy --> read energy calculated in subArray.cpp (based on wireRes wireCap etc)
 				double totalWireResistance;
-				totalWireResistance = (j + 1) * param->wireResistanceRow + (weight.size() - i) * param->wireResistanceCol;
-				if (input[i] == 1) {
-					columnG += (double) 1.0/totalWireResistance;
-					activatedRow += 1 ;	
-				} else {
-					columnG += 1e-9;
-				}
+				totalWireResistance = param->numRowSubArray * param->wireResistanceCol;
+				columnG = (double) 1.0/totalWireResistance;
 			}
 		}
 		
