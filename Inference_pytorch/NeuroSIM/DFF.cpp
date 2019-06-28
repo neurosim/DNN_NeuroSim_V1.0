@@ -79,6 +79,9 @@ void DFF::CalculateArea(double _newHeight, double _newWidth, AreaModify _option)
 			int numDFFPerCol = (int)(_newHeight/hDff);
 			if (numDFFPerCol > numDff) {
 				numDFFPerCol = numDff;
+			} 
+			if (numDFFPerCol == 0) {
+				cout << "ERROR: Height of subArray is even smaller than a single DFF !!! " << endl;
 			}
 			int numColDFF = (int)ceil((double)numDff / numDFFPerCol);
 			height = _newHeight;
@@ -89,11 +92,14 @@ void DFF::CalculateArea(double _newHeight, double _newWidth, AreaModify _option)
 			int numDFFPerRow = (int)(_newWidth/wDff);
 			if (numDFFPerRow > numDff) {
 				numDFFPerRow = numDff;
+			} 
+			if (numDFFPerRow == 0) {
+				cout << "ERROR: Width of subArray is even smaller than a single DFF !!! " << endl;
 			}
 			int numRowDFF = (int)ceil((double)numDff / numDFFPerRow);
 			width = _newWidth;
 			height = hDff * numRowDFF;
-
+			
 		} else {	// Assume one row of DFF by default
 			width = wDff * numDff;
 			height = hDff;

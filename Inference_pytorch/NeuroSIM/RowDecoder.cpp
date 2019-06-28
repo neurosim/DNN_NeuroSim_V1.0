@@ -325,6 +325,7 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 			beta = 1 / (resPullUp * gm);
 			readLatency += horowitz(tr, beta, rampNandOutput, &rampNorOutput);
 			writeLatency += horowitz(tr, beta, rampNandOutput, &rampNorOutput);
+			rampOutput = rampNorOutput;
 		}
 
 		// Output driver or Mux enable circuit
@@ -350,6 +351,7 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 			beta = 1 / (resPullDown * gm);
 			readLatency += horowitz(tr, beta, rampInvOutput, &rampOutput);
 			writeLatency += horowitz(tr, beta, rampInvOutput, &rampOutput);
+			rampOutput = rampInvOutput;
 		} else {	// REGULAR: 2 INV as output driver
 			// 1st INV
 			resPullDown = CalculateOnResistance(widthDriverInvN, NMOS, inputParameter.temperature, tech);
@@ -365,8 +367,9 @@ void RowDecoder::CalculateLatency(double _rampInput, double _capLoad1, double _c
 			beta = 1 / (resPullUp * gm);
 			readLatency += horowitz(tr, beta, rampInvOutput, &rampOutput);
 			writeLatency += horowitz(tr, beta, rampInvOutput, &rampOutput);
+			rampOutput = rampInvOutput;
 		}
-
+		
 		readLatency *= numRead;
 
 		writeLatency *= numWrite;
