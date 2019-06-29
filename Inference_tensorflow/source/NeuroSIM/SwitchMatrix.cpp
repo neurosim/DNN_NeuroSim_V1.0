@@ -65,7 +65,7 @@ void SwitchMatrix::Initialize(int _mode, int _numOutput, double _resTg, bool _ne
     
 	// DFF
 	dff.Initialize(numOutput, clkFreq);       // used for scan-in ...
-
+	
 	// TG  resTg = cell.resMemCellOn / numLoad * IR_DROP_TOLERANCE;
 	resTg = _resTg;      // given actual TG resistance
 	
@@ -133,7 +133,6 @@ void SwitchMatrix::CalculateArea(double _newHeight, double _newWidth, AreaModify
 
 				width = _newWidth;
 				height = hTg * numRowTgPair + dff.height;
-
 			} else {
 				// Default (pass gate with folding=1)
 				CalculatePassGateArea(widthTgN, widthTgP, tech, 1, &hTg, &wTg);

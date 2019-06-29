@@ -65,7 +65,7 @@ int main(int argc, char * argv[]) {
 	auto start = chrono::high_resolution_clock::now();
 
 	gen.seed(0);
-
+	
 	vector<vector<double> > netStructure;
 	netStructure = getNetStructure(argv[1]);
 
@@ -112,8 +112,8 @@ int main(int argc, char * argv[]) {
 	cout << "Tile and PE size are optimized to maximize memory utilization ( = memory mapped by synapse / total memory on chip)" << endl;
 	cout << endl;
 	if (!param->novelMapping) {
-		cout << "Desired Conventional Mapped Tile Memory Matrix Size: " << desiredTileSizeCM << "x" << desiredTileSizeCM << endl;
-		cout << "Desired Conventional PE Memory Matrix Size: " << desiredPESizeCM << "x" << desiredPESizeCM << endl;
+		cout << "Desired Conventional Mapped Tile Storage Size: " << desiredTileSizeCM << "x" << desiredTileSizeCM << endl;
+		cout << "Desired Conventional PE Storage Size: " << desiredPESizeCM << "x" << desiredPESizeCM << endl;
 	} else {
 		cout << "Desired Conventional Mapped Tile Storage Size: " << desiredTileSizeCM << "x" << desiredTileSizeCM << endl;
 		cout << "Desired Conventional PE Storage Size: " << desiredPESizeCM << "x" << desiredPESizeCM << endl;
@@ -208,7 +208,7 @@ int main(int argc, char * argv[]) {
 		
 		cout << "-------------------- Estimation of Layer " << i+1 << " ----------------------" << endl;
 		
-		ChipCalculatePerformance(cell, i, argv[2*i+4], argv[2*i+4], argv[2*i+5], netStructure[i][6],  
+		ChipCalculatePerformance(cell, i, argv[2*i+4], argv[2*i+4], argv[2*i+5], netStructure[i][6],
 					netStructure, markNM, numTileEachLayer, utilizationEachLayer, speedUpEachLayer, tileLocaEachLayer,
 					numPENM, desiredPESizeNM, desiredTileSizeCM, desiredPESizeCM, CMTileheight, CMTilewidth, NMTileheight, NMTilewidth,
 					&layerReadLatency, &layerReadDynamicEnergy, &tileLeakage, &layerbufferLatency, &layerbufferDynamicEnergy, &layericLatency, &layericDynamicEnergy,
@@ -225,11 +225,14 @@ int main(int argc, char * argv[]) {
 		
 		cout << "layer" << i+1 << "'s readLatency is: " << layerReadLatency*1e9 << "ns" << endl;
 		cout << "layer" << i+1 << "'s readDynamicEnergy is: " << layerReadDynamicEnergy*1e12 << "pJ" << endl;
+		cout << "layer" << i+1 << "'s leakagePower is: " << numTileEachLayer[0][i] * numTileEachLayer[1][i] * tileLeakage*1e6 << "uW" << endl;
 		cout << "layer" << i+1 << "'s leakageEnergy is: " << layerLeakageEnergy*1e12 << "pJ" << endl;
 		cout << "layer" << i+1 << "'s buffer latency is: " << layerbufferLatency*1e9 << "ns" << endl;
 		cout << "layer" << i+1 << "'s buffer readDynamicEnergy is: " << layerbufferDynamicEnergy*1e12 << "pJ" << endl;
 		cout << "layer" << i+1 << "'s ic latency is: " << layericLatency*1e9 << "ns" << endl;
 		cout << "layer" << i+1 << "'s ic readDynamicEnergy is: " << layericDynamicEnergy*1e12 << "pJ" << endl;
+		
+		
 		cout << endl;
 		cout << "************************ Breakdown of Latency and Dynamic Energy *************************" << endl;
 		cout << endl;
@@ -271,10 +274,12 @@ int main(int argc, char * argv[]) {
 	cout << "Chip total readLatency is: " << chipReadLatency*1e9 << "ns" << endl;
 	cout << "Chip total readDynamicEnergy is: " << chipReadDynamicEnergy*1e12 << "pJ" << endl;
 	cout << "Chip total leakage Energy is: " << chipLeakageEnergy*1e12 << "pJ" << endl;
+	cout << "Chip total leakage Power is: " << chipLeakage*1e6 << "uW" << endl;
 	cout << "Chip buffer readLatency is: " << chipbufferLatency*1e9 << "ns" << endl;
 	cout << "Chip buffer readDynamicEnergy is: " << chipbufferReadDynamicEnergy*1e12 << "pJ" << endl;
 	cout << "Chip ic readLatency is: " << chipicLatency*1e9 << "ns" << endl;
 	cout << "Chip ic readDynamicEnergy is: " << chipicReadDynamicEnergy*1e12 << "pJ" << endl;
+	
 	cout << endl;
 	cout << "************************ Breakdown of Latency and Dynamic Energy *************************" << endl;
 	cout << endl;
@@ -287,6 +292,7 @@ int main(int argc, char * argv[]) {
 	cout << endl;
 	cout << "************************ Breakdown of Latency and Dynamic Energy *************************" << endl;
 	cout << endl;
+	
 	cout << endl;
 	cout << "----------------------------- Performance -------------------------------" << endl;
 	cout << "Energy Efficiency TOPS/W (Layer-by-Layer Process): " << numComputation/(chipReadDynamicEnergy*1e12+chipLeakageEnergy*1e12) << endl;
@@ -298,6 +304,7 @@ int main(int argc, char * argv[]) {
     cout << "------------------------------ Simulation Performance --------------------------------" <<  endl;
 	cout << "Total Run-time of NeuroSim: " << duration.count() << " seconds" << endl;
 	cout << "------------------------------ Simulation Performance --------------------------------" <<  endl;
+	
 	return 0;
 }
 

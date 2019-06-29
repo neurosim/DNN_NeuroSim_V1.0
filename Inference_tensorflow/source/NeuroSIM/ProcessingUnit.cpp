@@ -224,7 +224,7 @@ vector<double> ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRo
 	busInput->CalculateArea(1, true); 
 	busOutput->CalculateArea(1, true);	
 	area += subArray->usedArea * (numSubArrayRow*numSubArrayCol) + adderTree->area + bufferInput->area + bufferOutput->area;
-
+	
 	*height = sqrt(area);
 	*width = area/(*height);
 	
@@ -238,10 +238,12 @@ vector<double> ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRo
 
 
 double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, 
-											const vector<vector<int> > &inputVector, int arrayDupRow, int arrayDupCol, int numSubArrayRow, int numSubArrayCol, int weightMatrixRow,
+											const vector<vector<double> > &inputVector,
+											int arrayDupRow, int arrayDupCol, int numSubArrayRow, int numSubArrayCol, int weightMatrixRow,
 											int weightMatrixCol, int numInVector, MemCell& cell, double *readLatency, double *readDynamicEnergy, double *leakage, 
 											double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy,
-											double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther) {
+											double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, 
+											double *coreEnergyAccum, double *coreEnergyOther) {
 	
 	/*** define how many subArray are used to map the whole layer ***/
 	*readLatency = 0;
@@ -279,12 +281,12 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 						// assign weight and input to specific subArray
 						vector<vector<double> > subArrayMemory;
 						subArrayMemory = CopySubArray(newMemory, i*param->numRowSubArray, i*param->numColSubArray, numRowMatrix, numColMatrix);
-						vector<vector<int> > subArrayInput;
+						vector<vector<double> > subArrayInput;
 						subArrayInput = CopySubInput(inputVector, i*param->numRowSubArray, numInVector, numRowMatrix);
 						
 						for (int i=0; i<numInVector; i++) {                 // calculate single subArray through the total input vectors
 							double activityRowRead = 0;
-							vector<int> input; 
+							vector<double> input; 
 							input = GetInputVector(subArrayInput, i, &activityRowRead);
 							subArray->activityRowRead = activityRowRead;
 							
@@ -296,7 +298,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 							}
 							
 							vector<double> columnResistance;
-							columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead);
+							columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead, subArray->resCellAccess);
 							
 							subArray->CalculateLatency(1e20, columnResistance);
 							subArray->CalculatePower(columnResistance);
@@ -312,7 +314,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 							*coreEnergyADC += subArray->readDynamicEnergyADC;
 							*coreEnergyAccum += subArray->readDynamicEnergyAccum;
 							*coreEnergyOther += subArray->readDynamicEnergyOther;
-						}	
+						}
 						adderTree->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
 						adderTree->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 						
@@ -337,12 +339,12 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 			// assign weight and input to specific subArray
 			vector<vector<double> > subArrayMemory;
 			subArrayMemory = CopySubArray(newMemory, 0, 0, weightMatrixRow, weightMatrixCol);
-			vector<vector<int> > subArrayInput;
+			vector<vector<double> > subArrayInput;
 			subArrayInput = CopySubInput(inputVector, 0, numInVector, weightMatrixRow);
 			
 			for (int i=0; i<numInVector; i++) {                 // calculate single subArray through the total input vectors
 				double activityRowRead = 0;
-				vector<int> input;
+				vector<double> input;
 				input = GetInputVector(subArrayInput, i, &activityRowRead);
 				subArray->activityRowRead = activityRowRead;
 				int cellRange = pow(2, param->cellBit);
@@ -354,7 +356,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 				}
 				
 				vector<double> columnResistance;
-				columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead);
+				columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead, subArray->resCellAccess);
 				
 				subArray->CalculateLatency(1e20, columnResistance);
 				subArray->CalculatePower(columnResistance);
@@ -389,12 +391,12 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 					// assign weight and input to specific subArray
 					vector<vector<double> > subArrayMemory;
 					subArrayMemory = CopySubArray(newMemory, i*param->numRowSubArray, j*param->numColSubArray, numRowMatrix, numColMatrix);
-					vector<vector<int> > subArrayInput;
+					vector<vector<double> > subArrayInput;
 					subArrayInput = CopySubInput(inputVector, i*param->numRowSubArray, numInVector, numRowMatrix);
 					
 					for (int i=0; i<numInVector; i++) {                 // calculate single subArray through the total input vectors
 						double activityRowRead = 0;
-						vector<int> input;
+						vector<double> input;
 						input = GetInputVector(subArrayInput, i, &activityRowRead);
 						subArray->activityRowRead = activityRowRead;
 						
@@ -406,7 +408,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 						}
 						
 						vector<double> columnResistance;
-						columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead);
+						columnResistance = GetColumnResistance(input, subArrayMemory, cell, param->parallelRead, subArray->resCellAccess);
 
 						subArray->CalculateLatency(1e20, columnResistance);
 						subArray->CalculatePower(columnResistance);
@@ -485,10 +487,10 @@ vector<vector<double> > CopySubArray(const vector<vector<double> > &orginal, int
 } 
 
 
-vector<vector<int> > CopySubInput(const vector<vector<int> > &orginal, int positionRow, int numInputVector, int numRow) {
-	vector<vector<int> > copy;
+vector<vector<double> > CopySubInput(const vector<vector<double> > &orginal, int positionRow, int numInputVector, int numRow) {
+	vector<vector<double> > copy;
 	for (int i=0; i<numRow; i++) {
-		vector<int> copyRow;
+		vector<double> copyRow;
 		for (int j=0; j<numInputVector; j++) {
 			copyRow.push_back(orginal[positionRow+i][j]);
 		}
@@ -500,10 +502,10 @@ vector<vector<int> > CopySubInput(const vector<vector<int> > &orginal, int posit
 }
 
 
-vector<int> GetInputVector(const vector<vector<int> > &input, int numInput, double *activityRowRead) {
-	vector<int> copy;
+vector<double> GetInputVector(const vector<vector<double> > &input, int numInput, double *activityRowRead) {
+	vector<double> copy;
 	for (int i=0; i<input.size(); i++) {
-		int x = input[i][numInput];
+		double x = input[i][numInput];
 		copy.push_back(x);   
 	}  
 	double numofreadrow = 0;  // initialize readrowactivity parameters
@@ -521,51 +523,64 @@ vector<int> GetInputVector(const vector<vector<int> > &input, int numInput, doub
 } 
 
 
-vector<double> GetColumnResistance(const vector<int> &input, const vector<vector<double> > &weight, MemCell& cell, bool parallelRead) {
+vector<double> GetColumnResistance(const vector<double> &input, const vector<vector<double> > &weight, MemCell& cell, bool parallelRead, double resCellAccess) {
 	vector<double> resistance;
 	vector<double> conductance;
-	double columnG = param->minConductance;
+	double columnG = 0; 
 	
 	for (int j=0; j<weight[0].size(); j++) {
 		int activatedRow = 0;
+		columnG = 0;
 		for (int i=0; i<weight.size(); i++) {
 			if (cell.memCellType == Type::RRAM) {	// eNVM
 				double totalWireResistance;
 				if (cell.accessType == CMOS_access) {
-					totalWireResistance = (j + 1) * param->wireResistanceRow + (weight.size() - i) * param->wireResistanceCol + cell.resistanceAccess;
+					totalWireResistance = (double) 1.0/weight[i][j] + (j + 1) * param->wireResistanceRow + (weight.size() - i) * param->wireResistanceCol + cell.resistanceAccess;
 				} else {
-					totalWireResistance = (j + 1) * param->wireResistanceRow + (weight.size() - i) * param->wireResistanceCol;
+					totalWireResistance = (double) 1.0/weight[i][j] + (j + 1) * param->wireResistanceRow + (weight.size() - i) * param->wireResistanceCol;
 				}
-				if (input[i] == 1) {
-					columnG += weight[i][j] + (double) 1/totalWireResistance;
+				if ((int) input[i] == 1) {
+					columnG += (double) 1.0/totalWireResistance;
 					activatedRow += 1 ;
-				} 
+				} else {
+					columnG += 0;
+				}
 			} else if (cell.memCellType == Type::FeFET) {
 				double totalWireResistance;
-				totalWireResistance = (j + 1) * param->wireResistanceRow + (weight.size() - i) * param->wireResistanceCol;
-				if (input[i] == 1) {
-					columnG += weight[i][j] + (double) 1/totalWireResistance;
+				totalWireResistance = (double) 1.0/weight[i][j] + (j + 1) * param->wireResistanceRow + (weight.size() - i) * param->wireResistanceCol;
+				if ((int) input[i] == 1) {
+					columnG += (double) 1.0/totalWireResistance;
 					activatedRow += 1 ;
-				} 
-			} else {	
+				} else {
+					columnG += 0;
+				}
+				
+			} else if (cell.memCellType == Type::SRAM) {	
 				// SRAM: weight value do not affect sense energy --> read energy calculated in subArray.cpp (based on wireRes wireCap etc)
-				double totalWireResistance;
-				totalWireResistance = param->numRowSubArray * param->wireResistanceCol;
-				columnG = (double) 1.0/totalWireResistance;
+				if ((int) input[i] == 1) {
+					columnG += (double) 1.0/resCellAccess + (double) 1.0/param->wireResistanceCol;
+					activatedRow += 1 ;
+				} else {
+					columnG += (double) 1.0/param->wireResistanceCol;
+				}
 			}
 		}
 		
-		if (!parallelRead) {  
-			conductance.push_back((double) columnG/activatedRow);
+		if (cell.memCellType == Type::RRAM || cell.memCellType == Type::FeFET) {
+			if (!parallelRead) {  
+				conductance.push_back((double) columnG/activatedRow);
+			} else {
+				conductance.push_back(columnG);
+			}
 		} else {
 			conductance.push_back(columnG);
 		}
 	}
 	// covert conductance to resistance
 	for (int i=0; i<weight[0].size(); i++) {
-		resistance.push_back((double) 1/conductance[i]);
+		resistance.push_back((double) 1.0/conductance[i]);
 	}
-	
+		
 	return resistance;
 	resistance.clear();
 } 

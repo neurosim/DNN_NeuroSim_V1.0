@@ -151,32 +151,29 @@ void Buffer::CalculateLatency(double numAccessBitRead, double numRead, double nu
 		writeWholeLatency = 0;
 		
 		if (SRAM) {
-			wlDecoder.CalculateLatency(1e20, lengthRow * 0.2e-15/1e-6, NULL, numBit/interface_width, numBit/interface_width);
-			precharger.CalculateLatency(1e20, lengthCol * 0.2e-15/1e-6, numBit/interface_width, numBit/interface_width);
-			sramWriteDriver.CalculateLatency(1e20, lengthCol * 0.2e-15/1e-6, lengthCol * unitWireRes, numBit/interface_width);
+			wlDecoder.CalculateLatency(1e20, lengthRow * 0.2e-15/1e-6, NULL, (double) numBit/interface_width, (double) numBit/interface_width);
+			precharger.CalculateLatency(1e20, lengthCol * 0.2e-15/1e-6, (double) numBit/interface_width, (double) numBit/interface_width);
+			sramWriteDriver.CalculateLatency(1e20, lengthCol * 0.2e-15/1e-6, lengthCol * unitWireRes, (double) numBit/interface_width);
 			
-			double resCellAccess = CalculateOnResistance(cell.widthAccessCMOS * tech.featureSize, NMOS, inputParameter.temperature, tech);
-			double capCellAccess = CalculateDrainCap(cell.widthAccessCMOS * tech.featureSize, NMOS, cell.widthInFeatureSize * tech.featureSize, tech);
+			double resCellAccess = CalculateOnResistance(param->widthAccessCMOS * tech.featureSize, NMOS, inputParameter.temperature, tech);
+			double capCellAccess = CalculateDrainCap(param->widthAccessCMOS * tech.featureSize, NMOS, param->widthInFeatureSizeSRAM * tech.featureSize, tech);
 			double resPullDown = CalculateOnResistance(param->widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech);
 			double tau = (resCellAccess + resPullDown) * (capCellAccess + lengthCol * 0.2e-15/1e-6) + lengthCol * unitWireRes * (lengthCol * 0.2e-15/1e-6) / 2;
 			tau *= log(tech.vdd / (tech.vdd - param->minSenseVoltage / 2));   
 			double gm = CalculateTransconductance(param->widthAccessCMOS * tech.featureSize, NMOS, tech);
 			double beta = 1 / (resPullDown * gm);
 			double colRamp = 0;
-			colDelay = horowitz(tau, beta, wlDecoder.rampOutput, &colRamp)*(numBit/interface_width);
-			
+			colDelay = horowitz(tau, beta, wlDecoder.rampOutput, &colRamp)*((double) numBit/interface_width);
 			readWholeLatency += wlDecoder.readLatency + precharger.readLatency + colDelay;
 			writeWholeLatency += wlDecoder.writeLatency + precharger.writeLatency + sramWriteDriver.writeLatency;
 		} else {
-			wlDecoder.CalculateLatency(1e20, wDff * interface_width * 0.2e-15/1e-6, NULL, numBit/interface_width, numBit/interface_width);
+			wlDecoder.CalculateLatency(1e20, wDff * interface_width * 0.2e-15/1e-6, NULL, (double) numBit/interface_width, (double) numBit/interface_width);
 			readWholeLatency += wlDecoder.readLatency;
-			readWholeLatency += (1/clkFreq/2)*numBit/interface_width;  // assume dff need half clock cycle to access
-			writeWholeLatency += wlDecoder.writeLatency + (1/clkFreq/2)*numBit/interface_width;
+			readWholeLatency += ((double) 1/clkFreq/2)*((double) numBit/interface_width);  // assume dff need half clock cycle to access
+			writeWholeLatency += wlDecoder.writeLatency + ((double) 1/clkFreq/2)*((double) numBit/interface_width);
 		}
-		
-		avgBitReadLatency = readWholeLatency/numBit;     // average latency per bit(sec/bit)
-		avgBitWriteLatency = writeWholeLatency/numBit;
-		
+		avgBitReadLatency = (double) readWholeLatency/numBit;     // average latency per bit(sec/bit)
+		avgBitWriteLatency = (double) writeWholeLatency/numBit;
 		readLatency = avgBitReadLatency*numRead;
 		writeLatency = avgBitWriteLatency*numWrite;
 	}

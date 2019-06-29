@@ -112,10 +112,10 @@ void CurrentSenseAmp::CalculateLatency(const vector<double> &columnResistance, d
 		cout << "[CurrentSenseAmp] Error: Require initialization first!" << endl;
 	} else {
 		double Group = numCol/numColMuxed;
+		double LatencyCol = 0;
 		readLatency = 0;
 		
 		for (double i=0; i<Group; i++) {
-			double LatencyCol = 0;
 			for (double j=0; j<numColMuxed; j++){
 				double T_Col = 0;
 				T_Col = GetColumnLatency(columnResistance[i*numColMuxed+j]);
@@ -129,6 +129,7 @@ void CurrentSenseAmp::CalculateLatency(const vector<double> &columnResistance, d
 			readLatency += LatencyCol;
 		}
 		readLatency *= numRead;
+		
 	}
 }
 
@@ -138,15 +139,15 @@ void CurrentSenseAmp::CalculatePower(const vector<double> &columnResistance, dou
 	} else {
 		leakage = 0;
 		readDynamicEnergy = 0;
-
+		
 		for (double i=0; i<numCol; i++) {
 			double P_Col = 0, T_Col = 0;
 			T_Col = GetColumnLatency(columnResistance[i]);
 			P_Col = GetColumnPower(columnResistance[i]);
-			
 			readDynamicEnergy += T_Col*P_Col;
 		}
 		readDynamicEnergy *= numRead;
+		
 	}
 }
 
@@ -265,9 +266,7 @@ double CurrentSenseAmp::GetColumnPower(double columnRes) {
 			Column_Power = (0.0516*log(columnRes/1000.0)+3.2349)*1e-6;
 		}
 	}
-	if (Column_Power > 1e-6) {
-		Column_Power = 1e-6;
-	}
+	
 	return Column_Power;
 	
 }

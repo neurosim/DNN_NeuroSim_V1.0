@@ -46,16 +46,16 @@
 /*** Functions ***/
 void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParameter, Technology& tech, MemCell& cell, int subArrayRowSize, int _numSubArrayCol);
 vector<double> ProcessingUnitCalculateArea(SubArray *subArray, int numSubArrayRow, int numSubArrayCol, double *height, double *width, double *bufferArea);
-double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, const vector<vector<int> > &inputVector, 
+double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, const vector<vector<double> > &inputVector, 
 										int arrayDupRow, int arrayDupCol, int numSubArrayRow, int numSubArrayCol, int weightMatrixRow, int weightMatrixCol, 
 										int numInVector, MemCell& cell, double *readLatency, double *readDynamicEnergy, double *leakage, 
 										double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy,
 										double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther);
 
 vector<vector<double> > CopySubArray(const vector<vector<double> > &orginal, int positionRow, int positionCol, int numRow, int numCol);
-vector<vector<int> > CopySubInput(const vector<vector<int> > &orginal, int positionRow, int numInputVector, int numRow);
-vector<int> GetInputVector(const vector<vector<int> > &input, int numInput, double *activityRowRead);
-vector<double> GetColumnResistance(const vector<int> &input, const vector<vector<double> > &weight, MemCell& cell, bool parallelRead);
+vector<vector<double> > CopySubInput(const vector<vector<double> > &orginal, int positionRow, int numInputVector, int numRow);
+vector<double> GetInputVector(const vector<vector<double> > &input, int numInput, double *activityRowRead);
+vector<double> GetColumnResistance(const vector<double> &input, const vector<vector<double> > &weight, MemCell& cell, bool parallelRead, double resCellAccess);
 
 
 #endif /* PROCESSINGUNIT_H_ */
