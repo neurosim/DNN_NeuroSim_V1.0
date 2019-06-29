@@ -130,6 +130,7 @@ void TileInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 								1, param->unitLengthWireResistance, param->clkFreq, param->peBufferType);
 		}
 	}
+	
 	inputBuffer->Initialize(param->numBitInput*param->numRowSubArray, numPE, 1, param->unitLengthWireResistance, param->clkFreq, param->peBufferType);
 	hTree->Initialize(ceil((double)sqrt((double)numPE)), ceil((double)sqrt((double)numPE)), param->localBusDelayTolerance, numPE*param->numRowSubArray);
 }
@@ -166,6 +167,7 @@ vector<double> TileCalculateArea(double numPE, double peSize, double *height, do
 	hTree->CalculateArea(PEheight, PEwidth, 16);
 	
 	area += PEarea*numPE + accumulation->area + inputBuffer->area + outputBuffer->area + hTree->area;
+	
 	*height = sqrt(area);
 	*width = area/(*height);
 	
@@ -179,7 +181,7 @@ vector<double> TileCalculateArea(double numPE, double peSize, double *height, do
 }
 
 
-void TileCalculatePerformance(const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, const vector<vector<int> > &inputVector, int novelMap, double numPE, 
+void TileCalculatePerformance(const vector<vector<double> > &newMemory, const vector<vector<double> > &oldMemory, const vector<vector<double> > &inputVector, int novelMap, double numPE, 
 							double peSize, int speedUpRow, int speedUpCol, int weightMatrixRow, int weightMatrixCol, int numInVector, MemCell& cell, double *readLatency, double *readDynamicEnergy, double *leakage,
 							double *bufferLatency, double *bufferDynamicEnergy, double *icLatency, double *icDynamicEnergy,
 							double *coreLatencyADC, double *coreLatencyAccum, double *coreLatencyOther, double *coreEnergyADC, double *coreEnergyAccum, double *coreEnergyOther) {
@@ -214,7 +216,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 				// assign weight and input to specific tile
 				vector<vector<double> > pEMemory;
 				pEMemory = CopyPEArray(newMemory, 0, 0, weightMatrixRow, weightMatrixCol);
-				vector<vector<int> > pEInput;
+				vector<vector<double> > pEInput;
 				pEInput = CopyPEInput(inputVector, 0, numInVector, weightMatrixRow);
 				
 				ProcessingUnitCalculatePerformance(subArrayInPE, pEMemory, pEMemory, pEInput, ceil((double)speedUpRow/sqrt((double)numPE)), ceil((double)speedUpCol/sqrt((double)numPE)), 
@@ -249,7 +251,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 							// assign weight and input to specific tile
 							vector<vector<double> > pEMemory;
 							pEMemory = CopyPEArray(newMemory, i*peSize, j*peSize, numRowMatrix, numColMatrix);
-							vector<vector<int> > pEInput;
+							vector<vector<double> > pEInput;
 							pEInput = CopyPEInput(inputVector, i*peSize, numInVector, numRowMatrix);
 							
 							ProcessingUnitCalculatePerformance(subArrayInPE, pEMemory, pEMemory, pEInput, ceil((double)speedUpRow/sqrt((double)numPE)), ceil((double)speedUpCol/sqrt((double)numPE)), 
@@ -303,7 +305,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 						
 						vector<vector<double> > pEMemory;
 						pEMemory = CopyPEArray(newMemory, i*peSize, j*peSize, numRowMatrix, numColMatrix);
-						vector<vector<int> > pEInput;
+						vector<vector<double> > pEInput;
 						pEInput = CopyPEInput(inputVector, i*peSize, numInVector, numRowMatrix);
 							
 						ProcessingUnitCalculatePerformance(subArrayInPE, pEMemory, pEMemory, pEInput, 1, 1, numSubArrayRow, numSubArrayCol, numRowMatrix,
@@ -359,16 +361,13 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 			outputBuffer->CalculateLatency(weightMatrixCol*(1+accumulation->numAdderBit), numInVector/param->numBitInput, weightMatrixCol*(1+accumulation->numAdderBit), numInVector/param->numBitInput);
 			outputBuffer->CalculatePower(weightMatrixCol*(1+accumulation->numAdderBit), numInVector/param->numBitInput, weightMatrixCol*(1+accumulation->numAdderBit), numInVector/param->numBitInput);
 		}
-		
 		//considering buffer activation: no matter speedup or not, the total number of data transferred is fixed
 		inputBuffer->CalculateLatency(weightMatrixRow, numInVector/param->numBitInput, weightMatrixRow, numInVector/param->numBitInput);
 		inputBuffer->CalculatePower(weightMatrixRow, numInVector, weightMatrixRow, numInVector);
 		*readLatency += inputBuffer->readLatency + inputBuffer->writeLatency;
 		*readDynamicEnergy += inputBuffer->readDynamicEnergy + inputBuffer->writeDynamicEnergy;
-		
 		*readLatency += outputBuffer->readLatency + outputBuffer->writeLatency;
 		*readDynamicEnergy += outputBuffer->readDynamicEnergy + outputBuffer->writeDynamicEnergy;
-		
 		// used to define travel distance
 		double PEheight, PEwidth, PEbufferArea;
 		int numSubArray = ceil((double) peSize/(double) param->numRowSubArray)*ceil((double) peSize/(double) param->numColSubArray);
@@ -393,7 +392,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 			if (i*peSize < weightMatrixRow) {
 				vector<vector<double> > pEMemory;
 				pEMemory = CopyPEArray(newMemory, i*peSize, 0, weightMatrixRow/numPE, weightMatrixCol);
-				vector<vector<int> > pEInput;
+				vector<vector<double> > pEInput;
 				pEInput = CopyPEInput(inputVector, i*peSize, numInVector, weightMatrixRow/numPE);
 					
 				ProcessingUnitCalculatePerformance(subArrayInPE, pEMemory, pEMemory, pEInput, 1, 1, numSubArrayRow, numSubArrayCol, weightMatrixRow/numPE,
@@ -466,6 +465,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 			outputBuffer->CalculatePower(weightMatrixCol*(1+accumulation->numAdderBit), numInVector/param->numBitInput/ceil((double)sqrt((double)numPE)), 
 									weightMatrixCol*(1+accumulation->numAdderBit), numInVector/param->numBitInput/ceil((double)sqrt((double)numPE)));
 		}
+		
 		*readLatency += outputBuffer->readLatency + outputBuffer->writeLatency;
 		*readDynamicEnergy += outputBuffer->readDynamicEnergy + outputBuffer->writeDynamicEnergy;
 		
@@ -507,10 +507,10 @@ vector<vector<double> > CopyPEArray(const vector<vector<double> > &orginal, int 
 } 
 
 
-vector<vector<int> > CopyPEInput(const vector<vector<int> > &orginal, int positionRow, int numInputVector, int numRow) {
-	vector<vector<int> > copy;
+vector<vector<double> > CopyPEInput(const vector<vector<double> > &orginal, int positionRow, int numInputVector, int numRow) {
+	vector<vector<double> > copy;
 	for (int i=0; i<numRow; i++) {
-		vector<int> copyRow;
+		vector<double> copyRow;
 		for (int j=0; j<numInputVector; j++) {
 			copyRow.push_back(orginal[positionRow+i][j]);
 		}

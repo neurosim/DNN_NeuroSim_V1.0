@@ -70,8 +70,8 @@ vector<vector<double> > OverallEachLayer(bool utilization, bool speedUp, const v
 vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPerSynapse, int numColPerSynapse, double maxConductance, double minConductance);
 vector<vector<double> > CopyArray(const vector<vector<double> > &orginal, int positionRow, int positionCol, int numRow, int numCol);
 vector<vector<double> > ReshapeArray(const vector<vector<double> > &orginal, int positionRow, int positionCol, int numRow, int numCol, int numPE, int weightMatrixRow);
-vector<vector<int> > LoadInInputData(const string &inputfile);
-vector<vector<int> > CopyInput(const vector<vector<int> > &orginal, int positionRow, int numInputVector, int numRow);
-vector<vector<int> > ReshapeInput(const vector<vector<int> > &orginal, int positionRow, int numInputVector, int numRow, int numPE, int weightMatrixRow);
+vector<vector<double> > LoadInInputData(const string &inputfile);
+vector<vector<double> > CopyInput(const vector<vector<double> > &orginal, int positionRow, int numInputVector, int numRow);
+vector<vector<double> > ReshapeInput(const vector<vector<double> > &orginal, int positionRow, int numInputVector, int numRow, int numPE, int weightMatrixRow);
 
 #endif /* CHIP_H_ */

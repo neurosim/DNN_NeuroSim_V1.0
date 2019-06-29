@@ -59,7 +59,7 @@ public:
 
 	/* Functions */
 	void PrintProperty(const char* str);
-	void Initialize(int _numCol, int _levelOutput, double _clkFreq, int _numReadCellPerOperationNeuro);
+	void Initialize(int _numCol, int _levelOutput, double _clkFreq, int _numReadCellPerOperationNeuro, bool _parallel);
 	void CalculateArea(double heightArray, double widthArray, AreaModify _option);
 	void CalculateLatency(const vector<double> &columnResistance, double numColMuxed, double numRead);
 	void CalculatePower(const vector<double> &columnResistance, double numRead);
@@ -73,6 +73,7 @@ public:
     int levelOutput;
 	
 	bool FPGA;
+	bool parallel;
 	bool neuro;
 	double clkFreq;
 	int numReadCellPerOperationNeuro;

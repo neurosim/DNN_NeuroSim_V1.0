@@ -423,7 +423,7 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 		*NMTilewidth = NMwidth;
 	}
 	
-	areaCMTile = TileCalculateArea(ceil((double) desiredTileSizeCM/(double) desiredPESizeCM), desiredPESizeCM, &CMheight, &CMwidth);
+	areaCMTile = TileCalculateArea(pow(ceil((double) desiredTileSizeCM/(double) desiredPESizeCM), 2), desiredPESizeCM, &CMheight, &CMwidth);
 	
 	double CMTileArea = areaCMTile[0];
 	double CMTileAreaIC = areaCMTile[1];
@@ -491,7 +491,7 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 	int weightMatrixCol = netStructure[l][5]*numColPerSynapse;
 	
 	// load in whole file 
-	vector<vector<int> > inputVector;
+	vector<vector<double> > inputVector;
 	inputVector = LoadInInputData(inputfile); 
 	vector<vector<double> > newMemory;
 	newMemory = LoadInWeightData(newweightfile, numRowPerSynapse, numColPerSynapse, param->maxConductance, param->minConductance);
@@ -537,14 +537,14 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				vector<vector<double> > tileMemory;
 				tileMemory = CopyArray(newMemory, i*desiredTileSizeCM, j*desiredTileSizeCM, numRowMatrix, numColMatrix);
 				
-				vector<vector<int> > tileInput;
+				vector<vector<double> > tileInput;
 				tileInput = CopyInput(inputVector, i*desiredTileSizeCM, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, numRowMatrix);
 				
 				TileCalculatePerformance(tileMemory, tileMemory, tileInput, markNM[l], ceil((double)desiredTileSizeCM/(double)desiredPESizeCM), desiredPESizeCM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
 									numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, &tileReadLatency, &tileReadDynamicEnergy, &tileLeakage,
 									&tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy, 
 									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
-				
+
 				*readLatency = max(tileReadLatency, (*readLatency));
 				*readDynamicEnergy += tileReadDynamicEnergy;
 				*bufferLatency = max(tilebufferLatency, (*bufferLatency));
@@ -644,7 +644,7 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				tileMemory = ReshapeArray(newMemory, i*desiredPESizeNM, j*desiredPESizeNM, (int) netStructure[l][2]*numRowPerSynapse/numTileEachLayer[0][l], 
 									(int) netStructure[l][5]*numRowPerSynapse/numTileEachLayer[1][l], numPENM, (int) netStructure[l][2]*numRowPerSynapse);
 
-				vector<vector<int> > tileInput;
+				vector<vector<double> > tileInput;
 				tileInput = ReshapeInput(inputVector, i*desiredPESizeNM, (int) (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, 
 									(int) netStructure[l][2]*numRowPerSynapse/numTileEachLayer[0][l], numPENM, (int) netStructure[l][2]*numRowPerSynapse);
 				
@@ -652,6 +652,7 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 									numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, 
 									&tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy,
 									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
+				
 				
 				*readLatency = max(tileReadLatency, (*readLatency));
 				*readDynamicEnergy += tileReadDynamicEnergy;
@@ -1063,7 +1064,7 @@ vector<vector<double> > ReshapeArray(const vector<vector<double> > &orginal, int
 
 
 
-vector<vector<int> > LoadInInputData(const string &inputfile) {
+vector<vector<double> > LoadInInputData(const string &inputfile) {
 	
 	ifstream infile(inputfile.c_str());     
 	string inputline;
@@ -1089,11 +1090,11 @@ vector<vector<int> > LoadInInputData(const string &inputfile) {
 	infile.clear();
 	infile.seekg(0, ios::beg);          
 	
-	vector<vector<int> > inputvector;              
+	vector<vector<double> > inputvector;              
 	// load the data into inputvector ...
 	for (int row=0; row<ROWin; row++) {	
-		vector<int> inputvectorrow;
-		vector<int> inputvectorrowb;
+		vector<double> inputvectorrow;
+		vector<double> inputvectorrowb;
 		getline(infile, inputline, '\n');             
 		istringstream iss;
 		iss.str(inputline);
@@ -1101,9 +1102,9 @@ vector<vector<int> > LoadInInputData(const string &inputfile) {
 			while(getline(iss, inputval, ',')){	
 				istringstream fs;
 				fs.str(inputval);
-				int f=0;
+				double f=0;
 				fs >> f;	
-				inputvectorrow.push_back(f);		
+				inputvectorrow.push_back(f);
 			}			
 		}		
 		inputvector.push_back(inputvectorrow);
@@ -1119,11 +1120,11 @@ vector<vector<int> > LoadInInputData(const string &inputfile) {
 
 
 
-vector<vector<int> > CopyInput(const vector<vector<int> > &orginal, int positionRow, int numInputVector, int numRow) {
+vector<vector<double> > CopyInput(const vector<vector<double> > &orginal, int positionRow, int numInputVector, int numRow) {
 	
-	vector<vector<int> > copy;
+	vector<vector<double> > copy;
 	for (int i=0; i<numRow; i++) {
-		vector<int> copyRow;
+		vector<double> copyRow;
 		for (int j=0; j<numInputVector; j++) {
 			copyRow.push_back(orginal[positionRow+i][j]);
 		}
@@ -1138,13 +1139,13 @@ vector<vector<int> > CopyInput(const vector<vector<int> > &orginal, int position
 
 
 
-vector<vector<int> > ReshapeInput(const vector<vector<int> > &orginal, int positionRow, int numInputVector, int numRow, int numPE, int weightMatrixRow) {
+vector<vector<double> > ReshapeInput(const vector<vector<double> > &orginal, int positionRow, int numInputVector, int numRow, int numPE, int weightMatrixRow) {
 	
-	vector<vector<int> > copy;
+	vector<vector<double> > copy;
 
 	for (int k=0; k<numPE; k++) {
 		for (int i=0; i<numRow; i++) {
-			vector<int> copyRow;
+			vector<double> copyRow;
 			for (int j=0; j<numInputVector; j++) {
 				copyRow.push_back(orginal[positionRow+k*weightMatrixRow+i][j]);
 			}

@@ -55,7 +55,7 @@ Param::Param() {
 								// 2: cell.memCellType = Type::RRAM
 								// 3: cell.memCellType = Type::FeFET
 	
-	accesstype = 1;         	// 1: cell.accessType = CMOS_access
+	accesstype = 4;         	// 1: cell.accessType = CMOS_access
 								// 2: cell.accessType = BJT_access
 								// 3: cell.accessType = diode_access
 								// 4: cell.accessType = none_access (Crossbar Array)
@@ -67,16 +67,16 @@ Param::Param() {
 	deviceroadmap = 1;      	// 1: inputParameter.deviceRoadmap = HP
 								// 2: inputParameter.deviceRoadmap = LSTP
 								
-	globalBufferType = false;   // false: register file
+	globalBufferType = true;   // false: register file
 								// true: SRAM
 								
-	tileBufferType = false;     // false: register file
+	tileBufferType = true;     // false: register file
 								// true: SRAM
 								
-	peBufferType = false;       // false: register file
+	peBufferType = true;       // false: register file
 								// true: SRAM
 	
-	chipActivation = true;      // false: activation (reLu/sigmoid) inside Tile
+	chipActivation = false;      // false: activation (reLu/sigmoid) inside Tile
 								// true: activation outside Tile
 								
 	reLu = true;                // false: sigmoid
@@ -85,11 +85,11 @@ Param::Param() {
 	novelMapping = false;       // false: conventional mapping
 								// true: novel mapping
 								
-	numRowSubArray = 128;       // # of rows in single subArray
-	numColSubArray = 128;       // # of columns in single subArray
+	numRowSubArray = 64;       // # of rows in single subArray
+	numColSubArray = 64;       // # of columns in single subArray
 	
-	heightInFeatureSizeSRAM = 7.69;                  // SRAM Cell height in feature size
-	widthInFeatureSizeSRAM = 23.23;                     // SRAM Cell width in feature size
+	heightInFeatureSizeSRAM = 8;                  // SRAM Cell height in feature size
+	widthInFeatureSizeSRAM = 20;                     // SRAM Cell width in feature size
 	widthSRAMCellNMOS = 2.08;                              
 	widthSRAMCellPMOS = 1.23;
 	widthAccessCMOS = 1.31;
@@ -195,6 +195,7 @@ Param::Param() {
 		unitLengthWireResistance =  Rho / ( wireWidth*1e-9 * wireWidth*1e-9 * AR );
 		wireResistanceRow = unitLengthWireResistance * wireLengthRow;
 		wireResistanceCol = unitLengthWireResistance * wireLengthCol;
+		
 	}
 	
 }

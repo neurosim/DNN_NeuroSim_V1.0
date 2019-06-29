@@ -150,7 +150,7 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			}
 		} else if (conventionalParallel) {
 			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
-			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro);
+			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 			if (numReadPulse > 1) {
 				shiftAdd.Initialize(ceil(numCol/numColMuxed), log2(levelOutput)+numReadPulse+1, clkFreq, spikingMode, numReadPulse);
@@ -164,11 +164,11 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			adder.Initialize(adderBit, numAdder);
 		} else if (BNNparallelMode || XNORparallelMode) {
 			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
-			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro);
+			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 		} else {
 			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
-			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro);
+			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 			if (numReadPulse > 1) {
 				shiftAdd.Initialize(ceil(numCol/numColMuxed), log2(levelOutput)+numReadPulse+1, clkFreq, spikingMode, numReadPulse);
@@ -234,7 +234,7 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			mux.Initialize(numInput, numColMuxed, resTg, FPGA);     
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed)), true, false);
 			
-			multilevelSenseAmp.Initialize(numCol/numColMuxed, pow(2, avgWeightBit), clkFreq, numReadCellPerOperationNeuro);
+			multilevelSenseAmp.Initialize(numCol/numColMuxed, pow(2, avgWeightBit), clkFreq, numReadCellPerOperationNeuro, false);
 			if (avgWeightBit > 1) {
 				multilevelSAEncoder.Initialize(pow(2, avgWeightBit), numCol/numColMuxed);
 			}
@@ -256,7 +256,7 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			mux.Initialize(ceil(numCol/numColMuxed), numColMuxed, resTg, FPGA);       
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed)), true, false);
 			
-			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro);
+			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 			if (numReadPulse > 1) {
 				shiftAdd.Initialize(ceil(numCol/numColMuxed), log2(levelOutput)+numReadPulse+1, clkFreq, spikingMode, numReadPulse);
@@ -292,7 +292,7 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			mux.Initialize(ceil(numCol/numColMuxed), numColMuxed, resTg, FPGA);       
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed/2)), true, true);    
 			
-			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro);
+			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 		} else {
 			double resTg = cell.resMemCellOn / numRow * IR_DROP_TOLERANCE;
@@ -306,7 +306,7 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			mux.Initialize(ceil(numCol/numColMuxed), numColMuxed, resTg, FPGA);      
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed)), true, false);
 			
-			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro);
+			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 			if (numReadPulse > 1) {
 				shiftAdd.Initialize(ceil(numCol/numColMuxed), log2(levelOutput)+numReadPulse+1, clkFreq, spikingMode, numReadPulse);
@@ -539,7 +539,7 @@ void SubArray::CalculateArea() {  //calculate layout area for total design
 	}
 }
 
-void SubArray::CalculateLatency(double _rampInput, const vector<double> &columnResistance) {   //calculate latency for different mode 
+void SubArray::CalculateLatency(double columnRes, const vector<double> &columnResistance) {   //calculate latency for different mode 
 	if (!initialized) {
 		cout << "[Subarray] Error: Require initialization first!" << endl;
 	} else {
@@ -612,7 +612,7 @@ void SubArray::CalculateLatency(double _rampInput, const vector<double> &columnR
 				double gm = CalculateTransconductance(cell.widthAccessCMOS * tech.featureSize, NMOS, tech);
 				double beta = 1 / (resPullDown * gm);
 				double colRamp = 0;
-				colDelay = horowitz(tau, beta, wlSwitchMatrix.rampOutput, &colRamp) * numReadOperationPerRow * numRow * numReadPulse * activityRowRead;
+				colDelay = horowitz(tau, beta, wlSwitchMatrix.rampOutput, &colRamp) * numReadPulse;
 
 				readLatency = 0;
 				readLatency += wlSwitchMatrix.readLatency;
@@ -1188,13 +1188,12 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += wlDecoderDriver.readDynamicEnergy;
 				readDynamicEnergy += mux.readDynamicEnergy;
 				readDynamicEnergy += muxDecoder.readDynamicEnergy;
-				readDynamicEnergy += rowCurrentSenseAmp.readDynamicEnergy;
 				readDynamicEnergy += adder.readDynamicEnergy;
 				readDynamicEnergy += dff.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
 				readDynamicEnergy += readDynamicEnergyArray;
 				
-				readDynamicEnergyADC = readDynamicEnergyArray + rowCurrentSenseAmp.readDynamicEnergy;
+				readDynamicEnergyADC = readDynamicEnergyArray + multilevelSenseAmp.readDynamicEnergy + multilevelSAEncoder.readLatency;
 				readDynamicEnergyAccum = adder.readDynamicEnergy + dff.readDynamicEnergy + shiftAdd.readDynamicEnergy;
 				readDynamicEnergyOther = wlDecoder.readDynamicEnergy + wlNewDecoderDriver.readDynamicEnergy + wlDecoderDriver.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
 
@@ -1216,7 +1215,8 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				leakage += slSwitchMatrix.leakage;
 				leakage += mux.leakage;
 				leakage += muxDecoder.leakage;
-				leakage += rowCurrentSenseAmp.leakage;
+				leakage += multilevelSenseAmp.leakage;
+				leakage += multilevelSAEncoder.leakage;
 				leakage += dff.leakage;
 				leakage += adder.leakage;
 				leakage += shiftAdd.leakage;
@@ -1279,7 +1279,6 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				leakage += multilevelSenseAmp.leakage;
 				leakage += multilevelSAEncoder.leakage;
 				leakage += shiftAdd.leakage;
-
 			} else if (BNNsequentialMode || XNORsequentialMode) {
 				double numReadCells = (int)ceil((double)numCol/numColMuxed);    // similar parameter as numReadCellPerOperationNeuro, which is for SRAM
 				double numWriteCells = (int)ceil((double)numCol/numWriteColMuxed); 
@@ -1511,7 +1510,8 @@ void SubArray::PrintProperty() {
 			slSwitchMatrix.PrintProperty("slSwitchMatrix");
 			mux.PrintProperty("mux");
 			muxDecoder.PrintProperty("muxDecoder");
-			rowCurrentSenseAmp.PrintProperty("currentSenseAmp");
+			multilevelSenseAmp.PrintProperty("multilevelSenseAmp or single-bit SenseAmp");
+			multilevelSAEncoder.PrintProperty("multilevelSAEncoder");
 			adder.PrintProperty("adder");
 			dff.PrintProperty("dff");
 			if (numReadPulse > 1) {
