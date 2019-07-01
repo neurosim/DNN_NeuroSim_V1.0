@@ -481,7 +481,7 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 }
 
 
-double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &newweightfile, const string &oldweightfile, const string &inputfile, bool followedByMaxPool, bool traceMode,
+double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &newweightfile, const string &oldweightfile, const string &inputfile, bool followedByMaxPool, 
 							const vector<vector<double> > &netStructure, const vector<int> &markNM, const vector<vector<double> > &numTileEachLayer, const vector<vector<double> > &utilizationEachLayer, 
 							const vector<vector<double> > &speedUpEachLayer, const vector<vector<double> > &tileLocaEachLayer, double numPENM, double desiredPESizeNM, double desiredTileSizeCM, 
 							double desiredPESizeCM, double CMTileheight, double CMTilewidth, double NMTileheight, double NMTilewidth,
@@ -499,29 +499,11 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 	int weightMatrixRow = netStructure[l][2]*netStructure[l][3]*netStructure[l][4]*numRowPerSynapse;
 	int weightMatrixCol = netStructure[l][5]*numColPerSynapse;
 	
+	// load in whole file 
 	vector<vector<double> > inputVector;
+	inputVector = LoadInInputData(inputfile); 
 	vector<vector<double> > newMemory;
-	double rowActivity = 0;
-	double newWeightPercentage = 0;
-	
-	if (!traceMode) {
-		// load in whole file 
-		inputVector = LoadInInputData(inputfile, traceMode); 
-		newMemory = LoadInWeightData(newweightfile, numRowPerSynapse, numColPerSynapse, param->maxConductance, param->minConductance, traceMode);
-		rowActivity = inputVector[0][0]; 
-		newWeightPercentage = newMemory[0][0];
-		
-		rowActivity = 0.5; 
-		newWeightPercentage = 0.5;
-		
-		cout << "rowActivity: " << rowActivity << endl;
-		cout << "weightPercentage: " << newWeightPercentage << endl;
-		
-	} else {
-		// load in whole file 
-		inputVector = LoadInInputData(inputfile, traceMode); 
-		newMemory = LoadInWeightData(newweightfile, numRowPerSynapse, numColPerSynapse, param->maxConductance, param->minConductance, traceMode);
-	}
+	newMemory = LoadInWeightData(newweightfile, numRowPerSynapse, numColPerSynapse, param->maxConductance, param->minConductance);
 	
 	*readLatency = 0;
 	*readDynamicEnergy = 0;
@@ -560,24 +542,17 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				int numRowMatrix = min(desiredTileSizeCM, weightMatrixRow-i*desiredTileSizeCM);
 				int numColMatrix = min(desiredTileSizeCM, weightMatrixCol-j*desiredTileSizeCM);
 				
+				// assign weight and input to specific tile
 				vector<vector<double> > tileMemory;
-				vector<vector<double> > tileInput;
+				tileMemory = CopyArray(newMemory, i*desiredTileSizeCM, j*desiredTileSizeCM, numRowMatrix, numColMatrix);
 				
-				if (!traceMode) {
-					TileCalculatePerformance(tileMemory, tileMemory, tileInput, traceMode, newWeightPercentage, newWeightPercentage, rowActivity, markNM[l], ceil((double)desiredTileSizeCM/(double)desiredPESizeCM), desiredPESizeCM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
-										numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, &tileReadLatency, &tileReadDynamicEnergy, &tileLeakage,
-										&tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy, 
-										&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
-				} else {
-					// assign weight and input to specific tile
-					tileMemory = CopyArray(newMemory, i*desiredTileSizeCM, j*desiredTileSizeCM, numRowMatrix, numColMatrix);
-					tileInput = CopyInput(inputVector, i*desiredTileSizeCM, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, numRowMatrix);
-					
-					TileCalculatePerformance(tileMemory, tileMemory, tileInput, traceMode, 0, 0, 0, markNM[l], ceil((double)desiredTileSizeCM/(double)desiredPESizeCM), desiredPESizeCM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
-										numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, &tileReadLatency, &tileReadDynamicEnergy, &tileLeakage,
-										&tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy, 
-										&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
-				}
+				vector<vector<double> > tileInput;
+				tileInput = CopyInput(inputVector, i*desiredTileSizeCM, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, numRowMatrix);
+				
+				TileCalculatePerformance(tileMemory, tileMemory, tileInput, markNM[l], ceil((double)desiredTileSizeCM/(double)desiredPESizeCM), desiredPESizeCM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
+									numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, &tileReadLatency, &tileReadDynamicEnergy, &tileLeakage,
+									&tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy, 
+									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
 
 				*readLatency = max(tileReadLatency, (*readLatency));
 				*readDynamicEnergy += tileReadDynamicEnergy;
@@ -673,27 +648,20 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				int numRowMatrix = netStructure[l][2]*netStructure[l][3]*netStructure[l][4]*numRowPerSynapse/numTileEachLayer[0][l];
 				int numColMatrix = netStructure[l][5]*numRowPerSynapse/numTileEachLayer[1][l];
 				
+				// assign weight and input to specific tile
 				vector<vector<double> > tileMemory;
-				vector<vector<double> > tileInput;
-				
-				if (!traceMode) {
-					TileCalculatePerformance(tileMemory, tileMemory, tileInput, traceMode, newWeightPercentage, newWeightPercentage, rowActivity, markNM[l], numPENM, desiredPESizeNM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
-										numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, 
-										&tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy,
-										&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
-				} else {
-					// assign weight and input to specific tile
-					tileMemory = ReshapeArray(newMemory, i*desiredPESizeNM, j*desiredPESizeNM, (int) netStructure[l][2]*numRowPerSynapse/numTileEachLayer[0][l], 
-										(int) netStructure[l][5]*numRowPerSynapse/numTileEachLayer[1][l], numPENM, (int) netStructure[l][2]*numRowPerSynapse);
+				tileMemory = ReshapeArray(newMemory, i*desiredPESizeNM, j*desiredPESizeNM, (int) netStructure[l][2]*numRowPerSynapse/numTileEachLayer[0][l], 
+									(int) netStructure[l][5]*numRowPerSynapse/numTileEachLayer[1][l], numPENM, (int) netStructure[l][2]*numRowPerSynapse);
 
-					tileInput = ReshapeInput(inputVector, i*desiredPESizeNM, (int) (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, 
-										(int) netStructure[l][2]*numRowPerSynapse/numTileEachLayer[0][l], numPENM, (int) netStructure[l][2]*numRowPerSynapse);
-					
-					TileCalculatePerformance(tileMemory, tileMemory, tileInput, traceMode, 0, 0, 0, markNM[l], numPENM, desiredPESizeNM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
-										numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, 
-										&tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy,
-										&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
-				}
+				vector<vector<double> > tileInput;
+				tileInput = ReshapeInput(inputVector, i*desiredPESizeNM, (int) (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, 
+									(int) netStructure[l][2]*numRowPerSynapse/numTileEachLayer[0][l], numPENM, (int) netStructure[l][2]*numRowPerSynapse);
+				
+				TileCalculatePerformance(tileMemory, tileMemory, tileInput, markNM[l], numPENM, desiredPESizeNM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
+									numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, 
+									&tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy,
+									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
+				
 				
 				*readLatency = max(tileReadLatency, (*readLatency));
 				*readDynamicEnergy += tileReadDynamicEnergy;
@@ -982,7 +950,7 @@ vector<vector<double> > OverallEachLayer(bool utilization, bool speedUp, const v
 
 
 
-vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPerSynapse, int numColPerSynapse, double maxConductance, double minConductance, bool traceMode) {
+vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPerSynapse, int numColPerSynapse, double maxConductance, double minConductance) {
 	
 	ifstream fileone(weightfile.c_str());                           
 	string lineone;
@@ -1017,9 +985,6 @@ vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPer
 	double RealMax = 1;
 	double RealMin = -1;
 	
-	double numNonZero = 0;
-	double activity = 0;
-	
 	vector<vector<double> > weight;            
 	// load the data into a weight matrix ...
 	for (int row=0; row<ROW; row++) {	
@@ -1050,9 +1015,6 @@ vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPer
 					remainder = ceil((double)(value%cellrange));
 					value = ceil((double)(value/cellrange));
 					synapsevector.insert(synapsevector.begin(), remainder);
-					if (remainder != 0) {
-						numNonZero +=1;
-					}
 				}
 				for (int u=0; u<numColPerSynapse; u++) {
 					double cellvalue = synapsevector[u];
@@ -1065,16 +1027,8 @@ vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPer
 		weightrow.clear();
 	}
 	fileone.close();
-	vector<vector<double> > activityWeight;
-	vector<double> activityWeightRow;
-	activity = numNonZero/(ROW*COL*numColPerSynapse);
-	activityWeightRow.push_back(activity);
-	activityWeight.push_back(activityWeightRow);
-	if (!traceMode) {
-		return activityWeight;
-	} else {
-		return weight;
-	}
+	
+	return weight;
 	weight.clear();
 }
 
@@ -1119,7 +1073,7 @@ vector<vector<double> > ReshapeArray(const vector<vector<double> > &orginal, int
 
 
 
-vector<vector<double> > LoadInInputData(const string &inputfile, bool traceMode) {
+vector<vector<double> > LoadInInputData(const string &inputfile) {
 	
 	ifstream infile(inputfile.c_str());     
 	string inputline;
@@ -1145,9 +1099,6 @@ vector<vector<double> > LoadInInputData(const string &inputfile, bool traceMode)
 	infile.clear();
 	infile.seekg(0, ios::beg);          
 	
-	double numNonZero = 0;
-	double activity = 0;
-	
 	vector<vector<double> > inputvector;              
 	// load the data into inputvector ...
 	for (int row=0; row<ROWin; row++) {	
@@ -1163,9 +1114,6 @@ vector<vector<double> > LoadInInputData(const string &inputfile, bool traceMode)
 				double f=0;
 				fs >> f;	
 				inputvectorrow.push_back(f);
-				if (f != 0) {
-					numNonZero += 1;
-				}
 			}			
 		}		
 		inputvector.push_back(inputvectorrow);
@@ -1173,16 +1121,8 @@ vector<vector<double> > LoadInInputData(const string &inputfile, bool traceMode)
 	}
 	// close the input file ...
 	infile.close();
-	vector<vector<double> > activityInput;
-	vector<double> activityInputRow;
-	activity = numNonZero/(ROWin*COLin);
-	activityInputRow.push_back(activity);
-	activityInput.push_back(activityInputRow);
-	if (!traceMode) {
-		return activityInput;
-	} else {
-		return inputvector;
-	}
+	
+	return inputvector;
 	inputvector.clear();
 }
 
