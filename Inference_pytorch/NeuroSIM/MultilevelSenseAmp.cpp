@@ -126,56 +126,47 @@ void MultilevelSenseAmp::CalculateArea(double heightArray, double widthArray, Ar
 	}
 }
 
-void MultilevelSenseAmp::CalculateLatency(bool traceMode, double columnRes, const vector<double> &columnResistance, double numColMuxed, double numRead) {
+void MultilevelSenseAmp::CalculateLatency(const vector<double> &columnResistance, double numColMuxed, double numRead) {
 	if (!initialized) {
 		cout << "[MultilevelSenseAmp] Error: Require initialization first!" << endl;
 	} else {
 		readLatency = 0;
 		
-		if (!traceMode) {
+		
+		for (double i=0; i<numColMuxed; i++) {
 			double LatencyCol = 0;
-			LatencyCol = 1e-9;
-			readLatency += LatencyCol;
-			readLatency *= numRead*numColMuxed;
-		} else {
-			for (double i=0; i<numColMuxed; i++) {
-				double LatencyCol = 0;
-				for (double j=0; j<numCol; j++){
-					double T_Col = 0;
-					T_Col = GetColumnLatency(columnResistance[i*numColMuxed+j]);
-					LatencyCol = max(LatencyCol, T_Col);
-					if (LatencyCol < 5e-10) {
-						LatencyCol = 5e-10;
-					} else if (LatencyCol > 5e-9) {
-						LatencyCol = 5e-9;
-					}
+			for (double j=0; j<numCol; j++){
+				double T_Col = 0;
+				T_Col = GetColumnLatency(columnResistance[i*numColMuxed+j]);
+				LatencyCol = max(LatencyCol, T_Col);
+				if (LatencyCol < 5e-10) {
+					LatencyCol = 5e-10;
+				} else if (LatencyCol > 5e-9) {
+					LatencyCol = 5e-9;
 				}
-				readLatency += LatencyCol;
 			}
-			readLatency *= numRead;
+			readLatency += LatencyCol;
 		}
+		readLatency *= numRead;
+		
 	}
 }
 
-void MultilevelSenseAmp::CalculatePower(bool traceMode, double columnRes, const vector<double> &columnResistance, double numRead) {
+void MultilevelSenseAmp::CalculatePower(const vector<double> &columnResistance, double numRead) {
 	if (!initialized) {
 		cout << "[MultilevelSenseAmp] Error: Require initialization first!" << endl;
 	} else {
 		leakage = 0;
 		readDynamicEnergy = 0;
-		if (!traceMode) {
-			readDynamicEnergy = 9e-13; 
-            readDynamicEnergy *= numCol;			
-		    readDynamicEnergy *= numRead;
-		} else {
-			for (double i=0; i<numCol; i++) {
-				double P_Col = 0, T_Col = 0;
-				T_Col = GetColumnLatency(columnResistance[i]);
-				P_Col = GetColumnPower(columnResistance[i]);
-				readDynamicEnergy += T_Col*P_Col*(levelOutput-1);
-			}
-			readDynamicEnergy *= numRead;
+		
+		for (double i=0; i<numCol; i++) {
+			double P_Col = 0, T_Col = 0;
+			T_Col = GetColumnLatency(columnResistance[i]);
+			P_Col = GetColumnPower(columnResistance[i]);
+			readDynamicEnergy += T_Col*P_Col*(levelOutput-1);
 		}
+		readDynamicEnergy *= numRead;
+		
 	}
 } 
 
