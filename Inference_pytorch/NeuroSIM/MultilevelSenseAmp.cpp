@@ -126,47 +126,56 @@ void MultilevelSenseAmp::CalculateArea(double heightArray, double widthArray, Ar
 	}
 }
 
-void MultilevelSenseAmp::CalculateLatency(const vector<double> &columnResistance, double numColMuxed, double numRead) {
+void MultilevelSenseAmp::CalculateLatency(bool traceMode, double columnRes, const vector<double> &columnResistance, double numColMuxed, double numRead) {
 	if (!initialized) {
 		cout << "[MultilevelSenseAmp] Error: Require initialization first!" << endl;
 	} else {
 		readLatency = 0;
 		
-		
-		for (double i=0; i<numColMuxed; i++) {
+		if (!traceMode) {
 			double LatencyCol = 0;
-			for (double j=0; j<numCol; j++){
-				double T_Col = 0;
-				T_Col = GetColumnLatency(columnResistance[i*numColMuxed+j]);
-				LatencyCol = max(LatencyCol, T_Col);
-				if (LatencyCol < 5e-10) {
-					LatencyCol = 5e-10;
-				} else if (LatencyCol > 5e-9) {
-					LatencyCol = 5e-9;
-				}
-			}
+			LatencyCol = 1e-9;
 			readLatency += LatencyCol;
+			readLatency *= numRead*numColMuxed;
+		} else {
+			for (double i=0; i<numColMuxed; i++) {
+				double LatencyCol = 0;
+				for (double j=0; j<numCol; j++){
+					double T_Col = 0;
+					T_Col = GetColumnLatency(columnResistance[i*numColMuxed+j]);
+					LatencyCol = max(LatencyCol, T_Col);
+					if (LatencyCol < 5e-10) {
+						LatencyCol = 5e-10;
+					} else if (LatencyCol > 5e-9) {
+						LatencyCol = 5e-9;
+					}
+				}
+				readLatency += LatencyCol;
+			}
+			readLatency *= numRead;
 		}
-		readLatency *= numRead;
-		
 	}
 }
 
-void MultilevelSenseAmp::CalculatePower(const vector<double> &columnResistance, double numRead) {
+void MultilevelSenseAmp::CalculatePower(bool traceMode, double columnRes, const vector<double> &columnResistance, double numRead) {
 	if (!initialized) {
 		cout << "[MultilevelSenseAmp] Error: Require initialization first!" << endl;
 	} else {
 		leakage = 0;
 		readDynamicEnergy = 0;
-		
-		for (double i=0; i<numCol; i++) {
-			double P_Col = 0, T_Col = 0;
-			T_Col = GetColumnLatency(columnResistance[i]);
-			P_Col = GetColumnPower(columnResistance[i]);
-			readDynamicEnergy += T_Col*P_Col*(levelOutput-1);
+		if (!traceMode) {
+			readDynamicEnergy = 9e-13; 
+            readDynamicEnergy *= numCol;			
+		    readDynamicEnergy *= numRead;
+		} else {
+			for (double i=0; i<numCol; i++) {
+				double P_Col = 0, T_Col = 0;
+				T_Col = GetColumnLatency(columnResistance[i]);
+				P_Col = GetColumnPower(columnResistance[i]);
+				readDynamicEnergy += T_Col*P_Col*(levelOutput-1);
+			}
+			readDynamicEnergy *= numRead;
 		}
-		readDynamicEnergy *= numRead;
-		
 	}
 } 
 
@@ -180,7 +189,7 @@ double MultilevelSenseAmp::GetColumnLatency(double columnRes) {
 	double up_bound = 3, mid_bound = 1.1, low_bound = 0.9;
 	double T_max = 0;
 	
-	if ((double) 1/columnRes == 0) {
+	if (((double) 1/columnRes == 0) || (columnRes == 0)) {
 		Column_Latency = 0;
 	} else {
 		if (param->deviceroadmap == 1) {  // HP
@@ -285,6 +294,8 @@ double MultilevelSenseAmp::GetColumnPower(double columnRes) {
 
 	if ((double) 1/columnRes == 0) { 
 		Column_Power = 1e-6;
+	} else if (columnRes == 0) {
+		Column_Power = 0;
 	} else {
 		if (param->deviceroadmap == 1) {  // HP
 			if (param->technode == 130) {
