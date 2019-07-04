@@ -2,10 +2,12 @@ import os
 import numpy as np
 from subprocess import call
 def hardware_estimation(IN, W, weight_length, input_length ):
+    if not os.path.exists('./layer_record'):
+        os.makedirs('./layer_record')
     output_path = './layer_record/'
     if os.path.exists('./layer_record/trace_command.sh'):
         os.remove('./layer_record/trace_command.sh')
-    f = open('./layer_record/trace_command.sh', "a")
+    f = open('./layer_record/trace_command.sh', "w")
     f.write('./NeuroSIM/main ./NeuroSIM/NetWork.csv '+str(weight_length)+' '+str(input_length)+' ')
     for i,(input,weight) in enumerate(zip(IN,W)):
         input_file_name = 'input_layer' + str(i) + '.csv'
