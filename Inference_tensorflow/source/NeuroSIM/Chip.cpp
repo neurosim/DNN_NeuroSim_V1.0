@@ -167,7 +167,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 	*numTileCol = 0;
 
 	if (param->novelMapping) {   // Novel Mapping
-		if (maxPESizeNM < 2*param->numRowSubArray) {
+		if (maxPESizeNM < 2*param->numRowSubArray || maxTileSizeCM < 4*param->numRowSubArray) {
 			cout << "ERROR: SubArray Size is too large, which break the chip hierarchey, please decrease the SubArray size! " << endl;
 		}else{
 		
@@ -175,6 +175,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			for (double thisPESize = maxPESizeNM; thisPESize>= 2*param->numRowSubArray; thisPESize/=2) {
 				// for layers use novel mapping
 				double thisUtilization = 0;
+				*desiredPESizeNM = maxPESizeNM;
 				vector<double> thisDesign;
 				thisDesign = TileDesignNM(thisPESize, markNM, netStructure, numRowPerSynapse, numColPerSynapse, numPENM);
 				thisUtilization = thisDesign[2];
@@ -187,6 +188,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			for (double thisTileSize = maxTileSizeCM; thisTileSize >= 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
+				*desiredTileSizeCM = maxTileSizeCM;
 				vector<double> thisDesign;
 				thisDesign = TileDesignCM(thisTileSize, markNM, netStructure, numRowPerSynapse, numColPerSynapse);
 				thisUtilization = thisDesign[2];
@@ -200,6 +202,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			for (double thisPESize = (*desiredTileSizeCM)/2; thisPESize >= 2*param->numRowSubArray; thisPESize/=2) {
 				// define PE Size for layers use conventional mapping
 				double thisUtilization = 0;
+				*desiredPESizeCM = (*desiredTileSizeCM)/2;
 				vector<vector<double> > thisDesign;
 				thisDesign = PEDesign(true, thisPESize, (*desiredTileSizeCM), (*desiredNumTileCM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
 				thisUtilization = thisDesign[1][0];
@@ -224,6 +227,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			for (double thisTileSize = maxTileSizeCM; thisTileSize >= 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
+				*desiredTileSizeCM = maxTileSizeCM;
 				vector<double> thisDesign;
 				thisDesign = TileDesignCM(thisTileSize, markNM, netStructure, numRowPerSynapse, numColPerSynapse);
 				thisUtilization = thisDesign[2];
@@ -238,6 +242,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			for (double thisPESize = (*desiredTileSizeCM)/2; thisPESize >= 2*param->numRowSubArray; thisPESize/=2) {
 				// define PE Size for layers use conventional mapping
 				double thisUtilization = 0;
+				*desiredPESizeCM = (*desiredTileSizeCM)/2;
 				vector<vector<double> > thisDesign;
 				thisDesign = PEDesign(true, thisPESize, (*desiredTileSizeCM), (*desiredNumTileCM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
 				thisUtilization = thisDesign[1][0];
