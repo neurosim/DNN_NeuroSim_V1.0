@@ -134,9 +134,9 @@ void Buffer::CalculateArea(double _newHeight, double _newWidth, AreaModify _opti
 		// INV
 		CalculateGateCapacitance(INV, 1, widthInvN, widthInvP, hDffInv, tech, &capInvInput, &capInvOutput);
 		// TG
-		capTgGateN = CalculateGateCap(widthTgN, tech);
-		capTgGateP = CalculateGateCap(widthTgP, tech);
-		CalculateGateCapacitance(INV, 1, widthTgN, widthTgP, hDffInv, tech, NULL, &capTgDrain);
+		capTgGateN = CalculateGateCap(widthInvN, tech);
+		capTgGateP = CalculateGateCap(widthInvP, tech);
+		CalculateGateCapacitance(INV, 1, widthInvN, widthInvP, hDffInv, tech, NULL, &capTgDrain);
 	}
 }
 
