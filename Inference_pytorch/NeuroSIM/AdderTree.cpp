@@ -67,28 +67,20 @@ void AdderTree::CalculateArea(double _newHeight, double _newWidth, AreaModify _o
 		double hInv, wInv, hNand, wNand;
 		
 		// Adder
-		int x = 0;                                // define # of adder in each stage
-		int y = numAdderBit;                                  // define # of bits of the adder in each stage
-		int z = 0;                           // define # of Adder in each Adder Tree
+		int numAdderEachStage = 0;                          // define # of adder in each stage
+		int numBitEachStage = numAdderBit;                  // define # of bits of the adder in each stage
+		int numAdderEachTree = 0;                           // define # of Adder in each Adder Tree
 		int i = ceil(log2(numSubcoreRow));
 		int j = numSubcoreRow;
 		
-		while (i != 0) {                 // calculate the total # of full adder in each Adder Tree
-			if (j%2 != 0) {
-				x = j/2 + 1;
-				z += y*x;
-				y += 1;
-				j = j/2 + 1;
-				i -= 1;
-			} else {
-				x = ceil(j/2);
-				z += y*x;
-				y += 1;
-				j = ceil(j/2);
-				i -= 1;
-			}
+		while (i != 0) {  // calculate the total # of full adder in each Adder Tree
+			numAdderEachStage = ceil(j/2);
+			numAdderEachTree += numBitEachStage*numAdderEachStage;
+			numBitEachStage += 1;
+			j = ceil(j/2);
+			i -= 1;
 		}
-		adder.Initialize(z, numAdderTree);   
+		adder.Initialize(numAdderEachTree, numAdderTree);   
 		
 		if (_newWidth && _option==NONE) {
 			adder.CalculateArea(NULL, _newWidth, NONE);
@@ -127,37 +119,29 @@ void AdderTree::CalculateLatency(double numRead, int numUnitAdd, double _capLoad
 	} else {
 		readLatency = 0;
 		
-		int x = 0;                                // define # of adder in each stage
-		int y = numAdderBit;                                  // define # of bits of the adder in each stage
-		int z = 0;                           // define # of Adder in each Adder Tree
+		int numAdderEachStage = 0;                          // define # of adder in each stage
+		int numBitEachStage = numAdderBit;                  // define # of bits of the adder in each stage
+		int numAdderEachTree = 0;                           // define # of Adder in each Adder Tree
 		int i = 0;
 		int j = 0;
+		
 		if (!numUnitAdd) {
 			i = ceil(log2(numSubcoreRow));
 			j = numSubcoreRow;
 		} else {
-			int i = ceil(log2(numUnitAdd));
-			int j = numUnitAdd;
+			i = ceil(log2(numUnitAdd));
+			j = numUnitAdd;
 		}
 
-		while (i != 0) {                 // calculate the total # of full adder in each Adder Tree
-			if (j%2 != 0) {
-				x = j/2 + 1;
-				adder.Initialize(y, x);   
-				adder.CalculateLatency(1e20, _capLoad, 1);
-				readLatency += adder.readLatency;
-				y += 1;
-				j = j/2 + 1;
-				i -= 1;
-			} else {
-				x = ceil(j/2);
-				adder.Initialize(y, x);   
-				adder.CalculateLatency(1e20, _capLoad, 1);
-				readLatency += adder.readLatency;
-				y += 1;
-				j = ceil(j/2);
-				i -= 1;
-			}
+		while (i != 0) {   // calculate the total # of full adder in each Adder Tree
+			numAdderEachStage = ceil(j/2);
+			adder.Initialize(numBitEachStage, numAdderEachStage);   
+			adder.CalculateLatency(1e20, _capLoad, 1);
+			readLatency += adder.readLatency;
+			numBitEachStage += 1;
+			j = ceil(j/2);
+			i -= 1;
+			
 			adder.initialized = false;
 		}
         readLatency *= numRead;		
@@ -171,52 +155,35 @@ void AdderTree::CalculatePower(double numRead, int numUnitAdd) {
 		leakage = 0;
 		readDynamicEnergy = 0;
 		
-		int x = 0;                                // define # of adder in each stage
-		int y = numAdderBit;                                  // define # of bits of the adder in each stage
-		int z = 0;                           // define # of Adder in each Adder Tree
+		int numAdderEachStage = 0;                          // define # of adder in each stage
+		int numBitEachStage = numAdderBit;                  // define # of bits of the adder in each stage
+		int numAdderEachTree = 0;                           // define # of Adder in each Adder Tree
 		int i = 0;
 		int j = 0;
+		
 		if (!numUnitAdd) {
 			i = ceil(log2(numSubcoreRow));
 			j = numSubcoreRow;
 		} else {
-			int i = ceil(log2(numUnitAdd));
-			int j = numUnitAdd;
+			i = ceil(log2(numUnitAdd));
+			j = numUnitAdd;
 		}
 		
-		while (i != 0) {                 // calculate the total # of full adder in each Adder Tree
-			if (j%2 != 0) {
-				x = j/2 + 1;
-				adder.Initialize(y, x);     
-				adder.CalculatePower(1, x);	
-				readDynamicEnergy += adder.readDynamicEnergy;
-				leakage += adder.leakage;
-				y += 1;
-				j = j/2 + 1;
-				i -= 1;
-			} else {
-				x = ceil(j/2);
-				adder.Initialize(y, x);     
-				adder.CalculatePower(1, x);	
-				readDynamicEnergy += adder.readDynamicEnergy;	
-				leakage += adder.leakage;
-				y += 1;
-				j = ceil(j/2);
-				i -= 1;
-			}
+		while (i != 0) {  // calculate the total # of full adder in each Adder Tree
+			numAdderEachStage = ceil(j/2);
+			adder.Initialize(numBitEachStage, numAdderEachStage);     
+			adder.CalculatePower(1, numAdderEachStage);	
+			readDynamicEnergy += adder.readDynamicEnergy;	
+			leakage += adder.leakage;
+			numBitEachStage += 1;
+			j = ceil(j/2);
+			i -= 1;
+			
 			adder.initialized = false;
 		}
-		
 		readDynamicEnergy *= numAdderTree;	
 		readDynamicEnergy *= numRead;
-		
 		leakage *= numAdderTree;
-
-		if (!readLatency) {
-			//cout << "[AdderTree] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
 	}
 }
 

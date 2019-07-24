@@ -53,7 +53,6 @@ void Adder::Initialize(int _numBit, int _numAdder){
 	if (initialized)
 		cout << "[Adder] Warning: Already initialized!" << endl;
 	
-	
 	numBit = _numBit;
 	numAdder = _numAdder;
 	
@@ -74,29 +73,35 @@ void Adder::CalculateArea(double _newHeight, double _newWidth, AreaModify _optio
 		if (_newHeight && _option==NONE) {   // Adder in multiple columns given the total height
 			hAdder = hNand;
 			wAdder = wNand * 9 * numBit;
-
-			// Calculate the number of adder per column
-			int numAdderPerCol = (int)(_newHeight/hAdder);
-			if (numAdderPerCol > numAdder) {
-				numAdderPerCol = numAdder;
-			}
-			int numColAdder = (int)ceil((double)numAdder / numAdderPerCol);
-			height = _newHeight;
-			width = wAdder * numColAdder;
 			
+			if (hAdder > _newHeight) {
+				cout << "[Adder] Error: A single adder height is even larger than the assigned height ! " << endl;
+			} else {
+				// Calculate the number of adder per column
+				int numAdderPerCol = (int)(_newHeight/hAdder);
+				if (numAdderPerCol > numAdder) {
+					numAdderPerCol = numAdder;
+				}
+				int numColAdder = (int)ceil((double)numAdder / numAdderPerCol);
+				height = _newHeight;
+				width = wAdder * numColAdder;
+			}
 		} else if (_newWidth && _option==NONE) { // Adder in multiple rows given the total width
 			hAdder = hNand * numBit;
 			wAdder = wNand * 9;
-
-			// Calculate the number of adder per row
-			int numAdderPerRow = (int)(_newWidth/wAdder);
-			if (numAdderPerRow > numAdder) {
-				numAdderPerRow = numAdder;
-			}
-			int numRowAdder = (int)ceil((double)numAdder / numAdderPerRow);
-			width = _newWidth;
-			height = hAdder * numRowAdder;
-
+			
+			if (wAdder > _newWidth) {
+				cout << "[Adder] Error: A single adder width is even larger than the assigned width ! " << endl;
+			} else {
+				// Calculate the number of adder per row
+				int numAdderPerRow = (int)(_newWidth/wAdder);
+				if (numAdderPerRow > numAdder) {
+					numAdderPerRow = numAdder;
+				}
+				int numRowAdder = (int)ceil((double)numAdder / numAdderPerRow);
+				width = _newWidth;
+				height = hAdder * numRowAdder;
+            }
 		} else {    // Assume one row of adder by default
 			hAdder = hNand;
 			wAdder = wNand * 9 * numBit;
@@ -104,6 +109,7 @@ void Adder::CalculateArea(double _newHeight, double _newWidth, AreaModify _optio
 			height = hAdder;
 		}
 		area = height * width;
+		
 		
 		// Modify layout
 		newHeight = _newHeight;
