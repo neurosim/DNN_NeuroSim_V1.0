@@ -114,22 +114,20 @@ void CurrentSenseAmp::CalculateLatency(const vector<double> &columnResistance, d
 		double Group = numCol/numColMuxed;
 		double LatencyCol = 0;
 		readLatency = 0;
-		
-		for (double i=0; i<Group; i++) {
-			for (double j=0; j<numColMuxed; j++){
-				double T_Col = 0;
-				T_Col = GetColumnLatency(columnResistance[i*numColMuxed+j]);
-				LatencyCol = max(LatencyCol, T_Col);
-				if (LatencyCol < 1e-9) {
-					LatencyCol = 1e-9;
-				} else if (LatencyCol > 20e-9) {
-					LatencyCol = 20e-9;
-				}
+
+		for (double j=0; j<columnResistance.size(); j++){
+			double T_Col = 0;
+			T_Col = GetColumnLatency(columnResistance[j]);
+			LatencyCol = max(LatencyCol, T_Col);
+			if (LatencyCol < 5e-10) {
+				LatencyCol = 5e-10;
+			} else if (LatencyCol > 50e-9) {
+				LatencyCol = 50e-9;
 			}
-			readLatency += LatencyCol;
 		}
+		readLatency += LatencyCol;
+		readLatency /= numCol;
 		readLatency *= numRead;
-		
 	}
 }
 
@@ -139,15 +137,13 @@ void CurrentSenseAmp::CalculatePower(const vector<double> &columnResistance, dou
 	} else {
 		leakage = 0;
 		readDynamicEnergy = 0;
-		
-		for (double i=0; i<numCol; i++) {
+		for (double i=0; i<columnResistance.size(); i++) {
 			double P_Col = 0, T_Col = 0;
 			T_Col = GetColumnLatency(columnResistance[i]);
 			P_Col = GetColumnPower(columnResistance[i]);
 			readDynamicEnergy += T_Col*P_Col;
 		}
 		readDynamicEnergy *= numRead;
-		
 	}
 }
 
@@ -157,75 +153,95 @@ double CurrentSenseAmp::GetColumnLatency(double columnRes) {
 	double up_bound = 3, mid_bound = 1.1, low_bound = 0.9;
 	double T_max = 0;
 	
-	if (param->deviceroadmap == 1) {  // HP
-		Column_Latency = 1e-9;
-	} else {                         // LP
-		if (param->technode == 130) {
-			T_max = (0.2679*log(columnRes/1000)+0.0478)*1e-9;   // T_max = (0.2679*log(R_BL/1000)+0.0478)*10^-9;
-
-			double ratio = Rref/columnRes;
-			double T = 0;
-			if (ratio <= low_bound){
-				T = T_max * (3.915*pow(ratio,3)-5.3996*pow(ratio,2)+2.4653*ratio+0.3856);  // y = 3.915*x^3-5.3996*x^2+2.4653*x+0.3856;
-			} else if (mid_bound <= ratio <= up_bound){
-				T = T_max * (0.0004*pow(ratio,4)-0.0087*pow(ratio,3)+0.0742*pow(ratio,2)-0.2725*ratio+1.2211);  // y = 0.0004*x^4-0.0087*x^3+0.0742*x^2-0.2725*x+1.2211;
-			} else if (ratio>up_bound){
-				T = T_max * (0.0004*pow(ratio,4)-0.0087*pow(ratio,3)+0.0742*pow(ratio,2)-0.2725*ratio+1.2211);
-			} else {
-				T = T_max;
-			}
-			Column_Latency = max(Column_Latency, T);
-			
-		} else if (param->technode == 90) {
-			T_max = (0.0586*log(columnRes/1000)+1.41)*1e-9;   // T_max = (0.0586*log(R_BL/1000)+1.41)*10^-9;
-
-			double ratio = Rref/columnRes;
-			double T = 0;
-			if (ratio <= low_bound){
-				T = T_max * (3.726*pow(ratio,3)-5.651*pow(ratio,2)+2.8249*ratio+0.3574);    // y = 3.726*x^3-5.651*x^2+2.8249*x+0.3574;
-			} else if (mid_bound <= ratio <= up_bound){
-				T = T_max * (0.0000008*pow(ratio,4)-0.00007*pow(ratio,3)+0.0017*pow(ratio,2)-0.0188*ratio+0.9835);  // y = 0.0000008*x^4-0.00007*x^3+0.0017*x^2-0.0188*x+0.9835;
-			} else if (ratio>up_bound){
-				T = T_max * (0.0000008*pow(ratio,4)-0.00007*pow(ratio,3)+0.0017*pow(ratio,2)-0.0188*ratio+0.9835);
-			} else {
-				T = T_max;
-			}
-			Column_Latency = max(Column_Latency, T);
-			
-		} else if (param->technode == 65) {
-			T_max = (0.1239*log(columnRes/1000)+0.6642)*1e-9;   // T_max = (0.1239*log(R_BL/1000)+0.6642)*10^-9;
-
-			double ratio = Rref/columnRes;
-			double T = 0;
-			if (ratio <= low_bound){
-				T = T_max * (1.3899*pow(ratio,3)-2.6913*pow(ratio,2)+2.0483*ratio+0.3202);    // y = 1.3899*x^3-2.6913*x^2+2.0483*x+0.3202;
-			} else if (mid_bound <= ratio <= up_bound){
-				T = T_max * (0.0036*pow(ratio,4)-0.0363*pow(ratio,3)+0.1043*pow(ratio,2)-0.0346*ratio+1.0512);   // y = 0.0036*x^4-0.0363*x^3+0.1043*x^2-0.0346*x+1.0512;
-			} else if (ratio>up_bound){
-				T = T_max * (0.0036*pow(ratio,4)-0.0363*pow(ratio,3)+0.1043*pow(ratio,2)-0.0346*ratio+1.0512);
-			} else {
-				T = T_max;
-			}
-			Column_Latency = max(Column_Latency, T);
-			
-		} else if (param->technode == 45) {
-			T_max = (0.0714*log(columnRes/1000)+0.7651)*1e-9;    // T_max = (0.0714*log(R_BL/1000)+0.7651)*10^-9;
-
-			double ratio = Rref/columnRes;
-			double T = 0;
-			if (ratio <= low_bound){
-				T = T_max * (3.7949*pow(ratio,3)-5.6685*pow(ratio,2)+2.6492*ratio+0.4807);    // y = 3.7949*x^3-5.6685*x^2+2.6492*x+0.4807
-			} else if (mid_bound <= ratio <= up_bound){
-				T = T_max * (0.000001*pow(ratio,4)-0.00006*pow(ratio,3)+0.0001*pow(ratio,2)-0.0171*ratio+1.0057);   // 0.000001*x^4-0.00006*x^3+0.0001*x^2-0.0171*x+1.0057;
-			} else if (ratio>up_bound){
-				T = T_max * (0.000001*pow(ratio,4)-0.00006*pow(ratio,3)+0.0001*pow(ratio,2)-0.0171*ratio+1.0057);
-			} else {
-				T = T_max;
-			}
-			Column_Latency = max(Column_Latency, T);
-			
-		} else {   // technode below and equal to 22nm
+	if (((double) 1/columnRes == 0) || (columnRes == 0)) {
+		Column_Latency = 0;
+	} else {
+		if (param->deviceroadmap == 1) {  // HP
 			Column_Latency = 1e-9;
+		} else {                         // LP
+			if (param->technode == 130) {
+				T_max = (0.2679*log(columnRes/1000)+0.0478)*1e-9;   // T_max = (0.2679*log(R_BL/1000)+0.0478)*10^-9;
+
+				double ratio = Rref/columnRes;
+				double T = 0;
+				if (ratio >= 20 || ratio <= 0.05) {
+					T = 1e-9;
+				} else {
+					if (ratio <= low_bound){
+						T = T_max * (3.915*pow(ratio,3)-5.3996*pow(ratio,2)+2.4653*ratio+0.3856);  // y = 3.915*x^3-5.3996*x^2+2.4653*x+0.3856;
+					} else if (mid_bound <= ratio <= up_bound){
+						T = T_max * (0.0004*pow(ratio,4)-0.0087*pow(ratio,3)+0.0742*pow(ratio,2)-0.2725*ratio+1.2211);  // y = 0.0004*x^4-0.0087*x^3+0.0742*x^2-0.2725*x+1.2211;
+					} else if (ratio>up_bound){
+						T = T_max * (0.0004*pow(ratio,4)-0.0087*pow(ratio,3)+0.0742*pow(ratio,2)-0.2725*ratio+1.2211);
+					} else {
+						T = T_max;
+					}
+				}
+				Column_Latency = max(Column_Latency, T);
+				
+			} else if (param->technode == 90) {
+				T_max = (0.0586*log(columnRes/1000)+1.41)*1e-9;   // T_max = (0.0586*log(R_BL/1000)+1.41)*10^-9;
+
+				double ratio = Rref/columnRes;
+				double T = 0;
+				if (ratio >= 20 || ratio <= 0.05) {
+					T = 1e-9;
+				} else {
+					if (ratio <= low_bound){
+						T = T_max * (3.726*pow(ratio,3)-5.651*pow(ratio,2)+2.8249*ratio+0.3574);    // y = 3.726*x^3-5.651*x^2+2.8249*x+0.3574;
+					} else if (mid_bound <= ratio <= up_bound){
+						T = T_max * (0.0000008*pow(ratio,4)-0.00007*pow(ratio,3)+0.0017*pow(ratio,2)-0.0188*ratio+0.9835);  // y = 0.0000008*x^4-0.00007*x^3+0.0017*x^2-0.0188*x+0.9835;
+					} else if (ratio>up_bound){
+						T = T_max * (0.0000008*pow(ratio,4)-0.00007*pow(ratio,3)+0.0017*pow(ratio,2)-0.0188*ratio+0.9835);
+					} else {
+						T = T_max;
+					}
+				}
+				Column_Latency = max(Column_Latency, T);
+				
+			} else if (param->technode == 65) {
+				T_max = (0.1239*log(columnRes/1000)+0.6642)*1e-9;   // T_max = (0.1239*log(R_BL/1000)+0.6642)*10^-9;
+
+				double ratio = Rref/columnRes;
+				double T = 0;
+				if (ratio >= 20 || ratio <= 0.05) {
+					T = 1e-9;
+				} else {
+					if (ratio <= low_bound){
+						T = T_max * (1.3899*pow(ratio,3)-2.6913*pow(ratio,2)+2.0483*ratio+0.3202);    // y = 1.3899*x^3-2.6913*x^2+2.0483*x+0.3202;
+					} else if (mid_bound <= ratio <= up_bound){
+						T = T_max * (0.0036*pow(ratio,4)-0.0363*pow(ratio,3)+0.1043*pow(ratio,2)-0.0346*ratio+1.0512);   // y = 0.0036*x^4-0.0363*x^3+0.1043*x^2-0.0346*x+1.0512;
+					} else if (ratio>up_bound){
+						T = T_max * (0.0036*pow(ratio,4)-0.0363*pow(ratio,3)+0.1043*pow(ratio,2)-0.0346*ratio+1.0512);
+					} else {
+						T = T_max;
+					}
+				}
+				Column_Latency = max(Column_Latency, T);
+				
+			} else if (param->technode == 45 || param->technode == 32) {
+				T_max = (0.0714*log(columnRes/1000)+0.7651)*1e-9;    // T_max = (0.0714*log(R_BL/1000)+0.7651)*10^-9;
+
+				double ratio = Rref/columnRes;
+				double T = 0;
+				if (ratio >= 20 || ratio <= 0.05) {
+					T = 1e-9;
+				} else {
+					if (ratio <= low_bound){
+						T = T_max * (3.7949*pow(ratio,3)-5.6685*pow(ratio,2)+2.6492*ratio+0.4807);    // y = 3.7949*x^3-5.6685*x^2+2.6492*x+0.4807
+					} else if (mid_bound <= ratio <= up_bound){
+						T = T_max * (0.000001*pow(ratio,4)-0.00006*pow(ratio,3)+0.0001*pow(ratio,2)-0.0171*ratio+1.0057);   // 0.000001*x^4-0.00006*x^3+0.0001*x^2-0.0171*x+1.0057;
+					} else if (ratio>up_bound){
+						T = T_max * (0.000001*pow(ratio,4)-0.00006*pow(ratio,3)+0.0001*pow(ratio,2)-0.0171*ratio+1.0057);
+					} else {
+						T = T_max;
+					}
+				}
+				Column_Latency = max(Column_Latency, T);
+				
+			} else {   // technode below and equal to 22nm
+				Column_Latency = 1e-9;
+			}
 		}
 	}
 	return Column_Latency;
@@ -237,33 +253,39 @@ double CurrentSenseAmp::GetColumnLatency(double columnRes) {
 double CurrentSenseAmp::GetColumnPower(double columnRes) {
 	double Column_Power = 0;
 
-	if (param->deviceroadmap == 1) {  // HP
-		if (param->technode == 130) {
-			Column_Power = (0.00001*(columnRes/1000.0)+8.8898)*1e-6;
-		} else if (param->technode == 90) {
-			Column_Power = (0.0002*(columnRes/1000.0)+10.09)*1e-6;
-		} else if (param->technode == 65) {
-			Column_Power = (0.0001*(columnRes/1000.0)+6.9579)*1e-6;
-		} else if (param->technode == 45) {
-			Column_Power = (0.0037*(columnRes/1000.0)+7.7017)*1e-6;
-		} else if (param->technode == 32){  
-			Column_Power = (0.0064*(columnRes/1000.0)+7.9648)*1e-6;
-		} else {   // technode below and equal to 22nm
-			Column_Power = (0.0087*(columnRes/1000.0)+2.1939)*1e-6;
-		}
-	} else {                         // LP
-		if (param->technode == 130) {
-			Column_Power = (0.2811*log(columnRes/1000.0)+6.0809)*1e-6;
-		} else if (param->technode == 90) {
-			Column_Power = (0.0578*log(columnRes/1000.0)+7.6102)*1e-6;
-		} else if (param->technode == 65) {
-			Column_Power = (0.0710*log(columnRes/1000.0)+6.4147)*1e-6;
-		} else if (param->technode == 45) {
-			Column_Power = (0.0710*log(columnRes/1000.0)+6.4147)*1e-6;
-		} else if (param->technode == 32){  
-			Column_Power = (0.0251*log(columnRes/1000.0)+4.7835)*1e-6;
-		}  else {   // technode below and equal to 22nm
-			Column_Power = (0.0516*log(columnRes/1000.0)+3.2349)*1e-6;
+	if ((double) 1/columnRes == 0) { 
+		Column_Power = 1e-6;
+	} else if (columnRes == 0) {
+		Column_Power = 0;
+	} else {
+		if (param->deviceroadmap == 1) {  // HP
+			if (param->technode == 130) {
+				Column_Power = (0.00001*log(columnRes/1000.0)+8.8898)*1e-6;
+			} else if (param->technode == 90) {
+				Column_Power = (0.0002*log(columnRes/1000.0)+10.09)*1e-6;
+			} else if (param->technode == 65) {
+				Column_Power = (0.0001*log(columnRes/1000.0)+6.9579)*1e-6;
+			} else if (param->technode == 45) {
+				Column_Power = (0.0037*log(columnRes/1000.0)+7.7017)*1e-6;
+			} else if (param->technode == 32){  
+				Column_Power = (0.0064*log(columnRes/1000.0)+7.9648)*1e-6;
+			} else {   // technode below and equal to 22nm
+				Column_Power = (0.0087*log(columnRes/1000.0)+2.1939)*1e-6;
+			}
+		} else {                         // LP
+			if (param->technode == 130) {
+				Column_Power = (0.2811*log(columnRes/1000.0)+6.0809)*1e-6;
+			} else if (param->technode == 90) {
+				Column_Power = (0.0578*log(columnRes/1000.0)+7.6102)*1e-6;
+			} else if (param->technode == 65) {
+				Column_Power = (0.0710*log(columnRes/1000.0)+6.4147)*1e-6;
+			} else if (param->technode == 45) {
+				Column_Power = (0.0710*log(columnRes/1000.0)+6.4147)*1e-6;
+			} else if (param->technode == 32){  
+				Column_Power = (0.0251*log(columnRes/1000.0)+4.7835)*1e-6;
+			}  else {   // technode below and equal to 22nm
+				Column_Power = (0.0516*log(columnRes/1000.0)+3.2349)*1e-6;
+			}
 		}
 	}
 	

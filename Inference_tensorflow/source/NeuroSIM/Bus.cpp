@@ -87,7 +87,7 @@ void Bus::Initialize(BusMode _mode, int _numRow, int _numCol, double _delaytoler
 	if (delaytolerance) {   // tradeoff: increase delay to decrease energy
 		double delay = 0;
 		double energy = 100;
-		while(delay<minUnitLengthDelay*(1+delaytolerance)) {
+		while ((delay<minUnitLengthDelay*(1+delaytolerance)) && (repeaterSize >= 1)) {
 			repeaterSize -= 1;
 			minDist *= 0.9;
 			CalculateGateArea(INV, 1, MIN_NMOS_SIZE * tech.featureSize * repeaterSize, tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize * repeaterSize, tech.featureSize * MAX_TRANSISTOR_HEIGHT, tech, &hRep, &wRep);

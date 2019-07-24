@@ -101,13 +101,9 @@ void BitShifter::CalculateLatency(double numRead) {
 		cout << "[BitShifter] Error: Require initialization first!" << endl;
 	} else {
 		readLatency = 0;
-
 		dff.CalculateLatency(1e20, 1);
-			
-		readLatency += dff.readLatency;                // read out parallely
+		readLatency += dff.readLatency; // read out parallely
 		readLatency *= numRead;    
-		
-		
 	}
 }
 
@@ -120,14 +116,7 @@ void BitShifter::CalculatePower(double numRead) {
 		
 		dff.CalculatePower(numRead, numDff);	
 		readDynamicEnergy += dff.readDynamicEnergy;
-
 		leakage += dff.leakage;
-		
-		if (!readLatency) {
-			//cout << "[BitShifter] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
 	}
 }
 

@@ -87,7 +87,6 @@ void Buffer::CalculateArea(double _newHeight, double _newWidth, AreaModify _opti
 	if (!initialized) {
 		cout << "[Buffer] Error: Require initialization first!" << endl;
 	} else {
-		
 		area = 0;
 		
 		if (SRAM) {
@@ -103,6 +102,14 @@ void Buffer::CalculateArea(double _newHeight, double _newWidth, AreaModify _opti
 			memoryArea = hDff * wDff * numBit;
 			wlDecoder.CalculateArea(hDff*ceil((double)numBit/(double)interface_width), NULL, NONE);
 			area += memoryArea + wlDecoder.area;
+			
+			// Capacitance
+			// INV
+			CalculateGateCapacitance(INV, 1, widthInvN, widthInvP, hDffInv, tech, &capInvInput, &capInvOutput);
+			// TG
+			capTgGateN = CalculateGateCap(widthInvN, tech);
+			capTgGateP = CalculateGateCap(widthInvP, tech);
+			CalculateGateCapacitance(INV, 1, widthInvN, widthInvP, hDffInv, tech, NULL, &capTgDrain);
 		}
 
 		if (_newWidth && _option==NONE) {
@@ -129,14 +136,6 @@ void Buffer::CalculateArea(double _newHeight, double _newWidth, AreaModify _opti
 			default:    // NONE
 				break;
 		}
-
-		// Capacitance
-		// INV
-		CalculateGateCapacitance(INV, 1, widthInvN, widthInvP, hDffInv, tech, &capInvInput, &capInvOutput);
-		// TG
-		capTgGateN = CalculateGateCap(widthInvN, tech);
-		capTgGateP = CalculateGateCap(widthInvP, tech);
-		CalculateGateCapacitance(INV, 1, widthInvN, widthInvP, hDffInv, tech, NULL, &capTgDrain);
 	}
 }
 
@@ -146,7 +145,6 @@ void Buffer::CalculateLatency(double numAccessBitRead, double numRead, double nu
 	} else {
 		readLatency = 0;
 		writeLatency = 0;
-		
 		readWholeLatency = 0;
 		writeWholeLatency = 0;
 		
@@ -193,7 +191,6 @@ void Buffer::CalculatePower(double numAccessBitRead, double numRead, double numA
 			wlDecoder.CalculatePower(numBit/interface_width, numBit/interface_width);
 			precharger.CalculatePower(numBit/interface_width, numBit/interface_width);
 			sramWriteDriver.CalculatePower(numBit/interface_width);
-			
 			readWholeDynamicEnergy += wlDecoder.readDynamicEnergy + precharger.readDynamicEnergy + sramWriteDriver.readDynamicEnergy;
 			writeWholeDynamicEnergy += wlDecoder.writeDynamicEnergy + precharger.writeDynamicEnergy + sramWriteDriver.writeDynamicEnergy;
 			leakage += wlDecoder.leakage + precharger.leakage + sramWriteDriver.leakage + senseAmp.leakage;
@@ -207,16 +204,16 @@ void Buffer::CalculatePower(double numAccessBitRead, double numRead, double numA
 			dffDynamicEnergy += capTgGateN * tech.vdd * tech.vdd * 2 * numBit;
 			dffDynamicEnergy += capTgGateP * tech.vdd * tech.vdd * 2 * numBit;
 			// D to Q path (only selected DFFs have energy consumption)
-			dffDynamicEnergy += (capTgDrain * 3 + capInvInput) * tech.vdd * tech.vdd * numBit;	// D input side
+			dffDynamicEnergy += (capTgDrain * 3 + capInvInput) * tech.vdd * tech.vdd * numBit;	    // D input side
 			dffDynamicEnergy += (capTgDrain  + capInvOutput) * tech.vdd * tech.vdd * numBit;	    // D feedback side
 			dffDynamicEnergy += (capInvInput + capInvOutput) * tech.vdd * tech.vdd * numBit;	    // Q output side
 			
 			readWholeDynamicEnergy += wlDecoder.readDynamicEnergy + dffDynamicEnergy;
 			writeWholeDynamicEnergy += wlDecoder.writeDynamicEnergy + dffDynamicEnergy;
+			
 			leakage += CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * 8 * numBit;
 			leakage += wlDecoder.leakage;
 		}
-		
 		avgBitReadDynamicEnergy = readWholeDynamicEnergy/numBit;
 		avgBitWriteDynamicEnergy = writeWholeDynamicEnergy/numBit;
 		

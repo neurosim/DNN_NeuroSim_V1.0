@@ -131,24 +131,20 @@ void MultilevelSenseAmp::CalculateLatency(const vector<double> &columnResistance
 		cout << "[MultilevelSenseAmp] Error: Require initialization first!" << endl;
 	} else {
 		readLatency = 0;
-		
-		
-		for (double i=0; i<numColMuxed; i++) {
-			double LatencyCol = 0;
-			for (double j=0; j<numCol; j++){
-				double T_Col = 0;
-				T_Col = GetColumnLatency(columnResistance[i*numColMuxed+j]);
-				LatencyCol = max(LatencyCol, T_Col);
-				if (LatencyCol < 5e-10) {
-					LatencyCol = 5e-10;
-				} else if (LatencyCol > 50e-9) {
-					LatencyCol = 50e-9;
-				}
+		double LatencyCol = 0;
+		for (double j=0; j<columnResistance.size(); j++){
+			double T_Col = 0;
+			T_Col = GetColumnLatency(columnResistance[j]);
+			LatencyCol = max(LatencyCol, T_Col);
+			if (LatencyCol < 5e-10) {
+				LatencyCol = 5e-10;
+			} else if (LatencyCol > 50e-9) {
+				LatencyCol = 50e-9;
 			}
-			readLatency += LatencyCol;
 		}
+		readLatency += LatencyCol;
+		readLatency /= numCol;
 		readLatency *= numRead;
-		
 	}
 }
 
@@ -158,15 +154,13 @@ void MultilevelSenseAmp::CalculatePower(const vector<double> &columnResistance, 
 	} else {
 		leakage = 0;
 		readDynamicEnergy = 0;
-		
-		for (double i=0; i<numCol; i++) {
+		for (double i=0; i<columnResistance.size(); i++) {
 			double P_Col = 0, T_Col = 0;
 			T_Col = GetColumnLatency(columnResistance[i]);
 			P_Col = GetColumnPower(columnResistance[i]);
-			readDynamicEnergy += T_Col*P_Col*(levelOutput-1);
+			readDynamicEnergy += T_Col*P_Col;
 		}
 		readDynamicEnergy *= numRead;
-		
 	}
 } 
 
