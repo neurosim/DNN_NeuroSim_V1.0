@@ -85,11 +85,11 @@ void AdderTree::CalculateArea(double _newHeight, double _newWidth, AreaModify _o
 		if (_newWidth && _option==NONE) {
 			adder.CalculateArea(NULL, _newWidth, NONE);
 			width = _newWidth;
-			height = adder.height;
+			height = adder.area/width;
 		} else if (_newHeight && _option==NONE) {
 			adder.CalculateArea(_newHeight, NULL, NONE);
 			height = _newHeight;
-			width = adder.width;
+			width = adder.area/height;
 		} else {
 			cout << "[AdderTree] Error: No width assigned for the adder tree circuit" << endl;
 			exit(-1);
