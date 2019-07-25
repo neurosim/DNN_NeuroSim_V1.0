@@ -173,9 +173,6 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 		
 			/*** Tile Design ***/
 			*desiredPESizeNM = MAX(maxPESizeNM, 2*param->numRowSubArray);
-			*desiredTileSizeCM = MAX(maxTileSizeCM, 4*param->numRowSubArray);
-			*desiredPESizeCM = (*desiredTileSizeCM)/2;
-			
 			for (double thisPESize = MAX(maxPESizeNM, 2*param->numRowSubArray); thisPESize> 2*param->numRowSubArray; thisPESize/=2) {
 				// for layers use novel mapping
 				double thisUtilization = 0;
@@ -188,7 +185,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 					*desiredNumTileNM = thisDesign[0];
 				}
 			}
-			
+			*desiredTileSizeCM = MAX(maxTileSizeCM, 4*param->numRowSubArray);
 			for (double thisTileSize = MAX(maxTileSizeCM, 4*param->numRowSubArray); thisTileSize > 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
@@ -201,7 +198,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 					*desiredNumTileCM = thisDesign[0];
 				}
 			}
-			
+			*desiredPESizeCM = (*desiredTileSizeCM)/2;
 			/*** PE Design ***/
 			for (double thisPESize = (*desiredTileSizeCM)/2; thisPESize > 2*param->numRowSubArray; thisPESize/=2) {
 				// define PE Size for layers use conventional mapping
@@ -229,8 +226,6 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 		} else {
 			/*** Tile Design ***/
 			*desiredTileSizeCM = MAX(maxTileSizeCM, 4*param->numRowSubArray);
-			*desiredPESizeCM = (*desiredTileSizeCM)/2;
-			
 			for (double thisTileSize = MAX(maxTileSizeCM, 4*param->numRowSubArray); thisTileSize > 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
@@ -243,7 +238,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 					*desiredNumTileCM = thisDesign[0];
 				}
 			}
-
+			*desiredPESizeCM = (*desiredTileSizeCM)/2;
 			/*** PE Design ***/
 			for (double thisPESize = (*desiredTileSizeCM)/2; thisPESize > 2*param->numRowSubArray; thisPESize/=2) {
 				// define PE Size for layers use conventional mapping
