@@ -113,29 +113,11 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 	cell.resistanceOff = param->resistanceOff;	                                // Roff resistance at Vr in the reported measurement dat (need to recalculate below if considering the nonlinearity)
 	cell.resistanceAvg = (cell.resistanceOn + cell.resistanceOff)/2;            // Average resistance (for energy estimation)
 	cell.readVoltage = param->readVoltage;	                                    // On-chip read voltage for memory cell
-	cell.maxNumLevelLTP = param->maxNumLevelLTP;	                            // Maximum number of conductance states during LTP or weight increase
-	cell.maxNumLevelLTD = param->maxNumLevelLTD;	                            // Maximum number of conductance states during LTD or weight decrease
-	double writeVoltageLTP = param->writeVoltage;
-	double writeVoltageLTD = param->writeVoltage;
-	cell.writeVoltage = sqrt(writeVoltageLTP * writeVoltageLTP + writeVoltageLTD * writeVoltageLTD);    // Use an average value of write voltage for NeuroSim
 	cell.readPulseWidth = param->readPulseWidth;
-	double writePulseWidthLTP = param->writePulseWidth;
-	double writePulseWidthLTD = param->writePulseWidth;
-	cell.writePulseWidth = (writePulseWidthLTP + writePulseWidthLTD) / 2;
 	cell.accessVoltage = param->accessVoltage;                                       // Gate voltage for the transistor in 1T1R
 	cell.resistanceAccess = param->resistanceAccess;
-	cell.multipleCells = param->multipleCells;                                       // Value should be N^2 such as 1, 4, 9 ...etc
 	cell.featureSize = param->featuresize; 
-	cell.nonlinearIV = param->nonlinearIV;                                           // This option is to consider I-V nonlinearity in cross-point array or not
-	cell.nonlinearity = param->nonlinearity;                                             // This is the nonlinearity for the current ratio at Vw and Vw/2
-	if (cell.nonlinearIV) {
-		double Vr_exp = 1;	                                            // XXX: Modify this to Vr in the reported measurement data (can be different than cell.readVoltage)
-		// Calculation of resistance at on-chip Vr
-		cell.resistanceOn = NonlinearResistance(cell.resistanceOn, cell.nonlinearity, cell.writeVoltage, Vr_exp, cell.readVoltage);
-		cell.resistanceOff = NonlinearResistance(cell.resistanceOff, cell.nonlinearity, cell.writeVoltage, Vr_exp, cell.readVoltage);
-		cell.resistanceAvg = (cell.resistanceOn + cell.resistanceOff)/2;      // Average resistance (for energy estimation)
-	}	
-	
+
 	if (cell.memCellType == Type::SRAM) {   // SRAM
 		cell.heightInFeatureSize = param->heightInFeatureSizeSRAM;                   // Cell height in feature size
 		cell.widthInFeatureSize = param->widthInFeatureSizeSRAM;                     // Cell width in feature size
@@ -157,12 +139,7 @@ void ProcessingUnitInitialize(SubArray *& subArray, InputParameter& inputParamet
 	subArray->numRow = param->numRowSubArray;
 	subArray->numCol = param->numRowSubArray;
 	subArray->levelOutput = param->levelOutput;
-	subArray->numWritePulse = param->numWritePulse;           // Only for memory mode (no trace-based)
-	subArray->neuro = param->neuro;                           // Neuromorphic mode
-	subArray->multifunctional = param->multifunctional;       // Multifunctional mode (not relevant for IMEC)            
-	subArray->parallelWrite = param->parallelWrite;           // Parallel write for crossbar RRAM in neuromorphic mode (not relevant for IMEC)
 	subArray->numColMuxed = param->numColMuxed;               // How many columns share 1 read circuit (for neuro mode with analog RRAM) or 1 S/A (for memory mode or neuro mode with digital RRAM)
-	subArray->numWriteColMuxed = param->numWriteColMuxed;     // How many columns share 1 write column decoder driver (for memory or neuro mode with digital RRAM)
     subArray->clkFreq = param->clkFreq;                       // Clock frequency
 	subArray->relaxArrayCellHeight = param->relaxArrayCellHeight;
 	subArray->relaxArrayCellWidth = param->relaxArrayCellWidth;

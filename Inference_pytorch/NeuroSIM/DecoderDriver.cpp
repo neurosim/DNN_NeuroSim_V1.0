@@ -80,7 +80,7 @@ void DecoderDriver::CalculateArea(double _newHeight, double _newWidth, AreaModif
 		// TG
 		if (_newHeight && _option==NONE) {
 			if (_newHeight < minCellHeight) {
-				cout << "[DecoderDriver] Error: pass gate height is even larger than the array height" << endl;
+				cout << "[DecoderDriver] Error: pass gate height is even larger than the assigned height" << endl;
 			}
 
 			int numTgPerCol = (int)(_newHeight / minCellHeight);    // Get max # Tg per column (this is not the final # Tg per column because the last column may have less # Tg)
@@ -91,7 +91,7 @@ void DecoderDriver::CalculateArea(double _newHeight, double _newWidth, AreaModif
 
 		} else if (_newWidth && _option==NONE) {
 			if (minCellWidth > _newWidth) {
-				cout << "[DecoderDriver] Error: pass gate width is even larger than the array width" << endl;
+				cout << "[DecoderDriver] Error: pass gate width is even larger than the assigned width" << endl;
 			}
 
 			int numTgPerRow = (int)(_newWidth / minCellWidth);    // Get max # Tg per row (this is not the final # Tg per row because the last row may have less # Tg)

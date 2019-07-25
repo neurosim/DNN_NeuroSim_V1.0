@@ -54,8 +54,8 @@ void MultilevelSAEncoder::Initialize(int _numLevel, int _numEncoder){
 	
 	numEncoder = _numEncoder;      // number of encoder needed
 	numLevel= _numLevel;           // number of levels from MultilevelSA
-	numInput = numLevel / 2;       // number of NAND gate in encoder
-	numGate = log2(numLevel);      // number of NAND gate in encoder 
+	numInput = ceil(numLevel/2);       // number of NAND gate in encoder
+	numGate = ceil(log2(numLevel));      // number of NAND gate in encoder 
 	
 	widthInvN = MIN_NMOS_SIZE * tech.featureSize;
 	widthInvP = tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize;
@@ -81,14 +81,31 @@ void MultilevelSAEncoder::CalculateArea(double _newHeight, double _newWidth, Are
 		wEncoder = 2*wInv + wNand + wNandLg;
 		hEncoder = max( (numLevel-1)*hInv, (numLevel-1)*hNand );
 	    
-		int numEncoderPerRow = (int)(_newWidth/wEncoder);
-		if (numEncoderPerRow > numEncoder) {
-			numEncoderPerRow = numEncoder;
+		if (_newWidth && _option==NONE) {
+			if (wEncoder > _newWidth) {
+				cout << "[MultilevelSAEncoder] Error: MultilevelSAEncoder width is even larger than the assigned width" << endl;
+			}
+			
+			int numEncoderPerRow = (int)(_newWidth/wEncoder);
+			if (numEncoderPerRow > numEncoder) {
+				numEncoderPerRow = numEncoder;
+			}
+			int numRowEncoder = (int)ceil((double)numEncoder / numEncoderPerRow);
+			width = _newWidth;
+			height = hEncoder * numRowEncoder;
+		} else if (_newHeight && _option==NONE) {
+			if (hEncoder > _newHeight) {
+				cout << "[MultilevelSAEncoder] Error: MultilevelSAEncoder height is even larger than the assigned height" << endl;
+			}
+			
+			int numEncoderPerColumn = (int) (_newHeight/hEncoder);
+			if (numEncoderPerColumn > numEncoder) {
+				numEncoderPerColumn = numEncoder;
+			}
+			int numColEncoder = (int)ceil((double)numEncoder / numEncoderPerColumn);
+			height = _newHeight;
+			width = wEncoder*numColEncoder;
 		}
-		int numRowEncoder = (int)ceil((double)numEncoder / numEncoderPerRow);
-		width = _newWidth;
-		height = hEncoder * numRowEncoder;
-		
 		area = height * width;
 		
 		// Modify layout

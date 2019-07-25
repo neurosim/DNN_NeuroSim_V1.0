@@ -60,14 +60,7 @@ void MaxPooling::Initialize(int _numBit, int _window, int _numMaxPooling) {    /
 	numStage = 0;                     // # of N-bit comparator stage in each MPU
 	
 	int n = window;
-	int m = 0;
-	
-	if (n%2 == 0) {   // even number
-		m = 0;
-	} else {          // odd number  -- need an additional comparator at the very end
-		m = 1;
-	}
-	
+	int m = n%2;
 	while (n != 0) {
 		int add = n/2;
 		numComparator += add;
@@ -76,7 +69,6 @@ void MaxPooling::Initialize(int _numBit, int _window, int _numMaxPooling) {    /
 	}
 	numComparator += m;
 	numStage += m;
-	
 	
 	// INV
 	widthInvN = MIN_NMOS_SIZE * tech.featureSize;
@@ -121,7 +113,6 @@ void MaxPooling::CalculateUnitArea(AreaModify _option) {
 		areaUnit += ((hInv*wInv)*6)+(hNand*wNand+hInv*wInv)+(hNor*wNor)+(hNor2*wNor2);     // each N-bit comparator needs 3*TG, 3*INV, 1*AND, 1*NOR and 1*OR
 		areaUnit *= numComparator;       // each MPU need *(numComparator) N-bit omparators
 
-		
 		switch (_option) {
 			case MAGIC:
 				MagicLayout();
@@ -151,10 +142,8 @@ void MaxPooling::CalculateArea(double widthArray){
 		cout << "[MaxPooling] Error: Require initialization first!" << endl;
 	} else {
 		width= widthArray;
-		
 		area = areaUnit * numMaxPooling;      // able to assign multiple MPU to operate in parallel
 		height = area/width;
-		
 	}
 }
 
@@ -182,7 +171,6 @@ void MaxPooling::CalculateLatency(double _rampInput, double _capLoad, double num
 		gm = CalculateTransconductance(widthNorN2, NMOS, tech);
 		beta = 1 / (resNOR * gm);
 		readLatency += horowitz(tr, beta, 1e20, &rampNOROutput);
-		
 		// INV
 		resINV = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech) * 2;
 		tr = resINV * (capInvInput + capNor2Output);
@@ -210,7 +198,6 @@ void MaxPooling::CalculatePower(double numRead) {
 
 		/* Leakage power */
 		leakage += CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * numComparator * numMaxPooling;
-		
 		comparator.CalculatePower(1,1);   // single 1-bit comparator read only once
 
 		/* Read Dynamic energy */
@@ -222,7 +209,6 @@ void MaxPooling::CalculatePower(double numRead) {
 		readDynamicEnergy += (capInvInput + capInvOutput) * tech.vdd * tech.vdd * 2;
 		// NOR2
 		readDynamicEnergy += (capNor2Input + capInvOutput) * tech.vdd * tech.vdd;
-		
 		readDynamicEnergy += comparator.readDynamicEnergy * numBit/2;   // assume the comparator will go to the half way and stop
 
 		readDynamicEnergy *= numComparator;    // need *numComparator N-bit comparator

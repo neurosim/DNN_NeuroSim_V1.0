@@ -68,11 +68,9 @@ void NewSwitchMatrix::Initialize(int _numOutput, double _activityRowRead, double
     
 	// DFF
 	dff.Initialize(numOutput, clkFreq); 
-    
 	widthTgN = MIN_NMOS_SIZE * tech.featureSize;
 	widthTgP = tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize;
-	
-	
+
 	initialized = true;
 }
 
@@ -87,28 +85,21 @@ void NewSwitchMatrix::CalculateArea(double _newHeight, double _newWidth, AreaMod
 			if (_newHeight < minCellHeight) {
 				cout << "[NewSwitchMatrix] Error: pass gate height is even larger than the array height" << endl;
 			}
-
-		int numTgPerCol = (int)(_newHeight / minCellHeight);	// Get max # Tg per column (this is not the final # Tg per column because the last column may have less # Tg)
-		numColTg = (int)ceil((double)numOutput / numTgPerCol);	// Get min # columns based on this max # Tg per column
-		numTgPerCol = (int)ceil((double)numOutput / numColTg);		// Get # Tg per column based on this min # columns
-		TgHeight = _newHeight / numTgPerCol;        // release TG height
-		CalculateGateArea(INV, 1, widthTgN, widthTgP, TgHeight, tech, &hTg, &wTg);         // calculate released TG layout height and width
-		
-		// DFF
-		dff.CalculateArea(_newHeight, NULL, NONE);
-		//dff.CalculateArea(_newHeight, NULL, MAGIC);
-
-				
-		height = _newHeight;
-		width = (wTg * 4) * numColTg + dff.width;      // add switch matrix and dff together
-
+			int numTgPerCol = (int)(_newHeight / minCellHeight);	// Get max # Tg per column (this is not the final # Tg per column because the last column may have less # Tg)
+			numColTg = (int)ceil((double)numOutput / numTgPerCol);	// Get min # columns based on this max # Tg per column
+			numTgPerCol = (int)ceil((double)numOutput / numColTg);		// Get # Tg per column based on this min # columns
+			TgHeight = _newHeight / numTgPerCol;        // release TG height
+			CalculateGateArea(INV, 1, widthTgN, widthTgP, TgHeight, tech, &hTg, &wTg);         // calculate released TG layout height and width
+			// DFF
+			dff.CalculateArea(_newHeight, NULL, NONE);	
+			height = _newHeight;
+			width = (wTg * 4) * numColTg + dff.width;      // add switch matrix and dff together
 		} else {       // MAGIC or OVERRIDE ...
 			CalculateGateArea(INV, 1, widthTgN, widthTgP, minCellHeight, tech, &hTg, &wTg); // Pass gate with folding
 			height = hTg * numOutput;
 			dff.CalculateArea(height, NULL, NONE);	// Need to give the height information, otherwise by default the area calculation of DFF is in column mode
 			width = (wTg * 4) + dff.width;
 		}
-		
 	    area = height * width;
 
 	    // Modify layout
@@ -167,7 +158,6 @@ void NewSwitchMatrix::CalculatePower(double numRead, double numWrite) {
 	if (!initialized) {
 		cout << "[NewSwitchMatrix] Error: Require initialization first!" << endl;
 	} else {
-		
 		leakage = 0;
 		readDynamicEnergy = 0;
 		writeDynamicEnergy = 0;
@@ -186,12 +176,6 @@ void NewSwitchMatrix::CalculatePower(double numRead, double numWrite) {
 		readDynamicEnergy *= numRead;
 		readDynamicEnergy += dff.readDynamicEnergy;
 		
-		if (!readLatency) {
-			//cout << "[Switch Matrix] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
-		
 		// Write dynamic energy (2-step write and average case half SET and half RESET)
 		// 1T1R
 		// connect to rows, when writing, pass GND to BL, no transmission energy acrossing BL
@@ -202,12 +186,6 @@ void NewSwitchMatrix::CalculatePower(double numRead, double numWrite) {
 	writeDynamicEnergy *= numWrite;
 	if (numWrite != 0)
 	    writeDynamicEnergy += dff.readDynamicEnergy;	// Use DFF read energy here because no write in the DFF module
-	
-	if (!writeLatency) {
-		//cout << "[Switch Matrix] Error: Need to calculate write latency first" << endl;
-	} else {
-		writePower = writeDynamicEnergy/writeLatency;
-	}
 }
 
 

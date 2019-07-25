@@ -172,11 +172,11 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 		}else{
 		
 			/*** Tile Design ***/
-			*desiredPESizeNM = maxPESizeNM;
-			*desiredTileSizeCM = maxTileSizeCM;
+			*desiredPESizeNM = MAX(maxPESizeNM, 2*param->numRowSubArray);
+			*desiredTileSizeCM = MAX(maxTileSizeCM, 4*param->numRowSubArray);
 			*desiredPESizeCM = (*desiredTileSizeCM)/2;
 			
-			for (double thisPESize = maxPESizeNM; thisPESize>= 2*param->numRowSubArray; thisPESize/=2) {
+			for (double thisPESize = MAX(maxPESizeNM, 2*param->numRowSubArray); thisPESize> 2*param->numRowSubArray; thisPESize/=2) {
 				// for layers use novel mapping
 				double thisUtilization = 0;
 				vector<double> thisDesign;
@@ -188,7 +188,8 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 					*desiredNumTileNM = thisDesign[0];
 				}
 			}
-			for (double thisTileSize = maxTileSizeCM; thisTileSize >= 4*param->numRowSubArray; thisTileSize/=2) {
+			
+			for (double thisTileSize = MAX(maxTileSizeCM, 4*param->numRowSubArray); thisTileSize > 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
 				vector<double> thisDesign;
@@ -200,8 +201,9 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 					*desiredNumTileCM = thisDesign[0];
 				}
 			}
+			
 			/*** PE Design ***/
-			for (double thisPESize = (*desiredTileSizeCM)/2; thisPESize >= 2*param->numRowSubArray; thisPESize/=2) {
+			for (double thisPESize = (*desiredTileSizeCM)/2; thisPESize > 2*param->numRowSubArray; thisPESize/=2) {
 				// define PE Size for layers use conventional mapping
 				double thisUtilization = 0;
 				vector<vector<double> > thisDesign;
@@ -212,6 +214,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 					*desiredPESizeCM = thisPESize;
 				}
 			}
+
 			peDup = PEDesign(false, (*desiredPESizeCM), (*desiredTileSizeCM), (*desiredNumTileCM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
 			/*** SubArray Duplication ***/
 			subArrayDup = SubArrayDup((*desiredPESizeCM), (*desiredPESizeNM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
@@ -225,10 +228,10 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			cout << "ERROR: SubArray Size is too large, which break the chip hierarchey, please decrease the SubArray size! " << endl;
 		} else {
 			/*** Tile Design ***/
-			*desiredTileSizeCM = maxTileSizeCM;
+			*desiredTileSizeCM = MAX(maxTileSizeCM, 4*param->numRowSubArray);
 			*desiredPESizeCM = (*desiredTileSizeCM)/2;
 			
-			for (double thisTileSize = maxTileSizeCM; thisTileSize >= 4*param->numRowSubArray; thisTileSize/=2) {
+			for (double thisTileSize = MAX(maxTileSizeCM, 4*param->numRowSubArray); thisTileSize > 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
 				vector<double> thisDesign;
@@ -242,7 +245,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			}
 
 			/*** PE Design ***/
-			for (double thisPESize = (*desiredTileSizeCM)/2; thisPESize >= 2*param->numRowSubArray; thisPESize/=2) {
+			for (double thisPESize = (*desiredTileSizeCM)/2; thisPESize > 2*param->numRowSubArray; thisPESize/=2) {
 				// define PE Size for layers use conventional mapping
 				double thisUtilization = 0;
 				vector<vector<double> > thisDesign;
@@ -767,6 +770,7 @@ vector<double> TileDesignCM(double tileSize, const vector<int > &markNM, const v
 		}
 	}
 	utilization = matrixTotalCM/(numTileTotal*tileSize*tileSize);
+	
 	vector<double> tileDesignCM;
 	tileDesignCM.push_back(numTileTotal);
 	// tileDesignCM[0] = numTileTotal; tileDesignCM[1] = matrixTotalCM; tileDesignCM = utilization
@@ -788,7 +792,6 @@ vector<double> TileDesignNM(double peSize, const vector<int > &markNM, const vec
 	}
 	utilization = matrixTotalNM/(numTileTotal*peSize*peSize*numPENM);
 	vector<double> tileDesignNM;
-	// tileDesignNM[0] = numTileTotal; tileDesignNM[1] = matrixTotalNM; tileDesignNM = utilization
 	tileDesignNM.push_back(numTileTotal);
 	tileDesignNM.push_back(matrixTotalNM);
 	tileDesignNM.push_back(utilization);
@@ -810,9 +813,10 @@ vector<vector<double> > PEDesign(bool Design, double peSize, double desiredTileS
 				int peForOneMatrixCol = ceil((double) netStructure[i][5]*(double) numColPerSynapse/(double) peSize);
 				int numPERow = ceil((double) desiredTileSize/(double) peSize);
 				int numPECol = ceil((double) desiredTileSize/(double) peSize);
-				actualDupRow = ceil((double) numPERow/(double) peForOneMatrixRow);
-				actualDupCol = ceil((double) numPECol/(double) peForOneMatrixCol);
+				actualDupRow = floor(numPERow/peForOneMatrixRow)==0? 1:floor(numPERow/peForOneMatrixRow);
+				actualDupCol = floor(numPECol/peForOneMatrixCol)==0? 1:floor(numPECol/peForOneMatrixCol);
 				matrixTotalCM += actualDupRow*actualDupCol*netStructure[i][2]*netStructure[i][3]*netStructure[i][4]*numRowPerSynapse*netStructure[i][5]*numColPerSynapse;
+				
 			} else {
 				actualDupRow = 1;
 				actualDupCol = 1;
@@ -826,6 +830,7 @@ vector<vector<double> > PEDesign(bool Design, double peSize, double desiredTileS
 		peDupCol.push_back(actualDupCol);
 	}
 	utilization = matrixTotalCM/(numTileTotal*desiredTileSize*desiredTileSize);
+	
 	vector<double> matrixTotal;
 	matrixTotal.push_back(matrixTotalCM);
 	vector<double> utiliz;
@@ -863,8 +868,8 @@ vector<vector<double> > SubArrayDup(double desiredPESizeCM, double desiredPESize
 				int arrayForOneMatrixCol = ceil((double) netStructure[i][5]*(double) numColPerSynapse/(double) param->numColSubArray);
 				int numSubArrayRow = ceil((double) desiredPESizeCM/(double) param->numRowSubArray);
 				int numSubArrayCol = ceil((double) desiredPESizeCM/(double) param->numColSubArray);
-				actualDupRow = ceil((double) numSubArrayRow/(double) arrayForOneMatrixRow);
-				actualDupCol = ceil((double) numSubArrayCol/(double) arrayForOneMatrixCol);
+				actualDupRow = floor(numSubArrayRow/arrayForOneMatrixRow)==0? 1:floor(numSubArrayRow/arrayForOneMatrixRow);
+				actualDupCol = floor(numSubArrayCol/arrayForOneMatrixCol)==0? 1:floor(numSubArrayCol/arrayForOneMatrixCol);
 			} else {
 				actualDupRow = 1;
 				actualDupCol = 1;
@@ -875,8 +880,8 @@ vector<vector<double> > SubArrayDup(double desiredPESizeCM, double desiredPESize
 				int arrayForOneMatrixCol = ceil((double) netStructure[i][5]*(double) numColPerSynapse/(double) param->numColSubArray);
 				int numSubArrayRow = ceil((double) desiredPESizeCM/(double) param->numRowSubArray);
 				int numSubArrayCol = ceil((double) desiredPESizeCM/(double) param->numColSubArray);
-				actualDupRow = ceil((double) numSubArrayRow/(double) arrayForOneMatrixRow);
-				actualDupCol = ceil((double) numSubArrayCol/(double) arrayForOneMatrixCol);
+				actualDupRow = floor(numSubArrayRow/arrayForOneMatrixRow)==0? 1:floor(numSubArrayRow/arrayForOneMatrixRow);
+				actualDupCol = floor(numSubArrayCol/arrayForOneMatrixCol)==0? 1:floor(numSubArrayCol/arrayForOneMatrixCol);
 			} else {
 				actualDupRow = 1;
 				actualDupCol = 1;
@@ -989,8 +994,8 @@ vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPer
 	double NormalizedMin = 0;
 	double NormalizedMax = pow(2, param->synapseBit)-1;
 	
-	double RealMax = 1;
-	double RealMin = -1;
+	double RealMax = param->algoWeightMax;
+	double RealMin = param->algoWeightMin;
 	
 	vector<vector<double> > weight;            
 	// load the data into a weight matrix ...

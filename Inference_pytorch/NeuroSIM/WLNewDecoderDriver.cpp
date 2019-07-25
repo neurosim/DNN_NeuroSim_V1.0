@@ -236,7 +236,6 @@ void WLNewDecoderDriver::CalculatePower(double numRead, double numWrite) {
 		leakage += CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * numWLRow * 2;
 		// assuming no leakge in TG
 		
-		
 		// Read dynamic energy (only one row activated)
 		readDynamicEnergy += capNandInput * tech.vdd * tech.vdd;                           // NAND2 input charging ( 0 to 1 )
 		readDynamicEnergy += (capInvOutput + capTgGateN) * tech.vdd * tech.vdd;            // INV output charging ( 0 to 1 )
@@ -244,24 +243,12 @@ void WLNewDecoderDriver::CalculatePower(double numRead, double numWrite) {
 		readDynamicEnergy += capTgDrain * cell.readVoltage * cell.readVoltage;         // TG gate energy
 		readDynamicEnergy *= numRead;          // multiply reading operation times
 		
-		if (!readLatency) {
-			//cout << "[WLNewDecoderDriver] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
-		
 		// Write dynamic energy (only one row activated)
 		writeDynamicEnergy += capNandInput * tech.vdd * tech.vdd;
 		writeDynamicEnergy += (capInvOutput + capTgGateN) * tech.vdd * tech.vdd;
 		writeDynamicEnergy += (capNandOutput + capTgGateN + capTgGateP) * tech.vdd * tech.vdd;     
 		writeDynamicEnergy += capTgDrain * cell.writeVoltage * cell.writeVoltage;    
 		writeDynamicEnergy *= numWrite;
-		
-		if (!writeLatency) {
-			//cout << "[Output Driver] Error: Need to calculate write latency first" << endl;
-		} else {
-			writePower = writeDynamicEnergy/writeLatency;
-		}
 	}
 }
 

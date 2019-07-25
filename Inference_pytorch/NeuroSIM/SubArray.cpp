@@ -96,8 +96,8 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 		}
 	
 	} else if (cell.memCellType == Type::RRAM ||  cell.memCellType == Type::FeFET) {  //if array is RRAM
-		double cellHeight = cell.heightInFeatureSize * sqrt(cell.multipleCells);  //set RRAM cell height, for multipleCells, cell number is N^2, eg: cell number is 9, means the cells are arranged as 3*3, so height is F*3
-		double cellWidth = cell.widthInFeatureSize * sqrt(cell.multipleCells);  //set RRAM cell width
+		double cellHeight = cell.heightInFeatureSize; 
+		double cellWidth = cell.widthInFeatureSize;  
 		if (cell.accessType == CMOS_access) {  // 1T1R
 			if (relaxArrayCellWidth) {
 				lengthRow = (double)numCol * MAX(cellWidth, MIN_CELL_WIDTH*2) * tech.featureSize;	// Width*2 because generally switch matrix has 2 pass gates per column, even the SL/BL driver has 2 pass gates per column in traditional 1T1R memory
@@ -149,7 +149,7 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 				shiftAdd.Initialize(numAdder, adderBit+numReadPulse+1, clkFreq, spikingMode, numReadPulse);
 			}
 		} else if (conventionalParallel) {
-			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
+			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);
 			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 			if (numReadPulse > 1) {
@@ -163,11 +163,11 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			dff.Initialize((adderBit+1)*numAdder, clkFreq);	
 			adder.Initialize(adderBit, numAdder);
 		} else if (BNNparallelMode || XNORparallelMode) {
-			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
+			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);
 			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 		} else {
-			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
+			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);
 			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 			if (numReadPulse > 1) {
@@ -193,28 +193,15 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			capRow2 += CalculateGateCap(cell.widthAccessCMOS * tech.featureSize, tech) * numCol;          //sum up all the gate cap of access CMOS, as the row cap
 			capCol += CalculateDrainCap(cell.widthAccessCMOS * tech.featureSize, NMOS, cell.widthInFeatureSize * tech.featureSize, tech) * numRow;	// If capCol is found to be too large, increase cell.widthInFeatureSize to relax the limit
 		} else {	// Cross-point
-			// The nonlinearity is from the selector, assuming RRAM itself is linear
-			if (cell.nonlinearIV) {   //introduce nonlinearity to the RRAM resistance
-				cell.resMemCellOn = cell.resistanceOn;
-				cell.resMemCellOff = cell.resistanceOff;
-				cell.resMemCellOnAtHalfVw = NonlinearResistance(cell.resistanceOn, cell.nonlinearity, cell.writeVoltage, cell.readVoltage, cell.writeVoltage/2);
-				cell.resMemCellOffAtHalfVw = NonlinearResistance(cell.resistanceOff, cell.nonlinearity, cell.writeVoltage, cell.readVoltage, cell.writeVoltage/2);
-				cell.resMemCellOnAtVw = NonlinearResistance(cell.resistanceOn, cell.nonlinearity, cell.writeVoltage, cell.readVoltage, cell.writeVoltage);
-				cell.resMemCellOffAtVw = NonlinearResistance(cell.resistanceOff, cell.nonlinearity, cell.writeVoltage, cell.readVoltage, cell.writeVoltage);
-				cell.resMemCellAvg = cell.resistanceAvg;
-				cell.resMemCellAvgAtHalfVw = (cell.resMemCellOnAtHalfVw + cell.resMemCellOffAtHalfVw) / 2;
-				cell.resMemCellAvgAtVw = (cell.resMemCellOnAtVw + cell.resMemCellOffAtVw) / 2;
-			} else {  //simply assume RRAM resistance is linear
-				cell.resMemCellOn = cell.resistanceOn;
-				cell.resMemCellOff = cell.resistanceOff;
-				cell.resMemCellOnAtHalfVw = cell.resistanceOn;
-				cell.resMemCellOffAtHalfVw = cell.resistanceOff;
-				cell.resMemCellOnAtVw = cell.resistanceOn;
-				cell.resMemCellOffAtVw = cell.resistanceOff;
-				cell.resMemCellAvg = cell.resistanceAvg;
-				cell.resMemCellAvgAtHalfVw = cell.resistanceAvg;
-				cell.resMemCellAvgAtVw = cell.resistanceAvg;
-			}
+			cell.resMemCellOn = cell.resistanceOn;
+			cell.resMemCellOff = cell.resistanceOff;
+			cell.resMemCellOnAtHalfVw = cell.resistanceOn;
+			cell.resMemCellOffAtHalfVw = cell.resistanceOff;
+			cell.resMemCellOnAtVw = cell.resistanceOn;
+			cell.resMemCellOffAtVw = cell.resistanceOff;
+			cell.resMemCellAvg = cell.resistanceAvg;
+			cell.resMemCellAvgAtHalfVw = cell.resistanceAvg;
+			cell.resMemCellAvgAtVw = cell.resistanceAvg;
 		}
 		
 		if (conventionalSequential) {  
@@ -230,7 +217,7 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			} else {
 				wlDecoderDriver.Initialize(ROW_MODE, numRow, numCol);
 			}
-			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulseAVG, clkFreq);     //SL use switch matrix
+			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);     //SL use switch matrix
 			mux.Initialize(numInput, numColMuxed, resTg, FPGA);     
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed)), true, false);
 			
@@ -250,9 +237,9 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			if (cell.accessType == CMOS_access) {
 				wlNewSwitchMatrix.Initialize(numRow, activityRowRead, clkFreq);         
 			} else {
-				wlSwitchMatrix.Initialize(ROW_MODE, numRow, resTg, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
+				wlSwitchMatrix.Initialize(ROW_MODE, numRow, resTg, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);
 			}
-			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg*numRow, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulseAVG, clkFreq);     
+			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg*numRow, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);     
 			mux.Initialize(ceil(numCol/numColMuxed), numColMuxed, resTg, FPGA);       
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed)), true, false);
 			
@@ -273,7 +260,7 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			} else {
 				wlDecoderDriver.Initialize(ROW_MODE, numRow, numCol);
 			}
-			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulseAVG, clkFreq);     //SL use switch matrix
+			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);     //SL use switch matrix
 			mux.Initialize(numInput, numColMuxed, resTg, FPGA);      
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed)), true, false);
 			
@@ -286,9 +273,9 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			if (cell.accessType == CMOS_access) {
 				wlNewSwitchMatrix.Initialize(numRow, activityRowRead, clkFreq);         
 			} else {
-				wlSwitchMatrix.Initialize(ROW_MODE, numRow, resTg, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
+				wlSwitchMatrix.Initialize(ROW_MODE, numRow, resTg, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);
 			}
-			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg * numRow, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulseAVG, clkFreq);     
+			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg * numRow, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);     
 			mux.Initialize(ceil(numCol/numColMuxed), numColMuxed, resTg, FPGA);       
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed/2)), true, true);    
 			
@@ -300,9 +287,9 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			if (cell.accessType == CMOS_access) {
 				wlNewSwitchMatrix.Initialize(numRow, activityRowRead, clkFreq);         
 			} else {
-				wlSwitchMatrix.Initialize(ROW_MODE, numRow, resTg, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulse, clkFreq);
+				wlSwitchMatrix.Initialize(ROW_MODE, numRow, resTg, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);
 			}
-			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg*numRow, neuro, parallelWrite, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, numWritePulseAVG, clkFreq);     
+			slSwitchMatrix.Initialize(COL_MODE, numCol, resTg*numRow, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);     
 			mux.Initialize(ceil(numCol/numColMuxed), numColMuxed, resTg, FPGA);      
 			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed)), true, false);
 			
@@ -583,6 +570,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatencyOther = wlDecoder.readLatency;
 				
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
+				/***
 				double resPull;
 				resPull = (CalculateOnResistance(cell.widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech) + CalculateOnResistance(cell.widthSRAMCellPMOS * tech.featureSize, PMOS, inputParameter.temperature, tech)) / 2;    // take average
 				tau = resPull * cell.capSRAMCell;
@@ -593,6 +581,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				writeLatency += wlDecoder.writeLatency;
 				writeLatency += precharger.writeLatency;
 				writeLatency += sramWriteDriver.writeLatency;
+				***/
 			} else if (conventionalParallel) {
 				int numReadOperationPerRow = (int)ceil((double)numCol/numReadCellPerOperationNeuro);
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
@@ -627,6 +616,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatencyOther = wlSwitchMatrix.readLatency;
 
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
+				/***
 				double resPull;
 				resPull = (CalculateOnResistance(cell.widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech) + CalculateOnResistance(cell.widthSRAMCellPMOS * tech.featureSize, PMOS, inputParameter.temperature, tech)) / 2;    // take average
 				tau = resPull * cell.capSRAMCell;
@@ -637,6 +627,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				writeLatency += wlSwitchMatrix.writeLatency;
 				writeLatency += precharger.writeLatency;
 				writeLatency += sramWriteDriver.writeLatency;
+				***/
 			} else if (BNNsequentialMode || XNORsequentialMode) {
 				int numReadOperationPerRow = (int)ceil((double)numCol/numReadCellPerOperationNeuro);
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
@@ -665,6 +656,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatency += dff.readLatency;
 				
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
+				/***
 				double resPull;
 				resPull = (CalculateOnResistance(cell.widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech) + CalculateOnResistance(cell.widthSRAMCellPMOS * tech.featureSize, PMOS, inputParameter.temperature, tech)) / 2;    // take average
 				tau = resPull * cell.capSRAMCell;
@@ -675,6 +667,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				writeLatency += wlDecoder.writeLatency;
 				writeLatency += precharger.writeLatency;
 				writeLatency += sramWriteDriver.writeLatency;
+				***/
 			} else if (BNNparallelMode || XNORparallelMode) {
 				int numReadOperationPerRow = (int)ceil((double)numCol/numReadCellPerOperationNeuro);
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
@@ -702,6 +695,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatency += multilevelSAEncoder.readLatency;
 
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
+				/***
 				double resPull;
 				resPull = (CalculateOnResistance(cell.widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech) + CalculateOnResistance(cell.widthSRAMCellPMOS * tech.featureSize, PMOS, inputParameter.temperature, tech)) / 2;    // take average
 				tau = resPull * cell.capSRAMCell;
@@ -712,6 +706,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				writeLatency += wlSwitchMatrix.writeLatency;
 				writeLatency += precharger.writeLatency;
 				writeLatency += sramWriteDriver.writeLatency;
+				***/
 			} else {
 				int numReadOperationPerRow = (int)ceil((double)numCol/numReadCellPerOperationNeuro);
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
@@ -742,6 +737,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatency += shiftAdd.readLatency;
 
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
+				/***
 				double resPull;
 				resPull = (CalculateOnResistance(cell.widthSRAMCellNMOS * tech.featureSize, NMOS, inputParameter.temperature, tech) + CalculateOnResistance(cell.widthSRAMCellPMOS * tech.featureSize, PMOS, inputParameter.temperature, tech)) / 2;    // take average
 				tau = resPull * cell.capSRAMCell;
@@ -752,6 +748,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				writeLatency += wlSwitchMatrix.writeLatency;
 				writeLatency += precharger.writeLatency;
 				writeLatency += sramWriteDriver.writeLatency;
+				***/
 			}
 	    } else if (cell.memCellType == Type::RRAM || cell.memCellType == Type::FeFET) {
 			if (conventionalSequential) {
@@ -794,12 +791,13 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatencyOther = MAX(wlDecoder.readLatency + wlNewDecoderDriver.readLatency + wlDecoderDriver.readLatency, muxDecoder.readLatency + mux.readLatency);
 				
 				// Write
+				/***
 				writeLatency = 0;
 				writeLatencyArray = 0;
 				writeLatencyArray += totalNumWritePulse * cell.writePulseWidth;
 				writeLatency += MAX(wlDecoder.writeLatency + wlNewDecoderDriver.writeLatency + wlDecoderDriver.writeLatency, slSwitchMatrix.writeLatency);
 				writeLatency += writeLatencyArray;
-
+				***/
 			} else if (conventionalParallel) {
 				double capBL = lengthCol * 0.2e-15/1e-6;
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
@@ -833,12 +831,13 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatencyOther = MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, muxDecoder.readLatency + mux.readLatency);
 
 				// Write
+				/***
 				writeLatency = 0;
 				writeLatencyArray = 0;
 				writeLatencyArray += totalNumWritePulse * cell.writePulseWidth;
 				writeLatency += MAX(wlNewSwitchMatrix.writeLatency + wlSwitchMatrix.writeLatency, slSwitchMatrix.writeLatency);
 				writeLatency += writeLatencyArray;
-				
+				***/
 			} else if (BNNsequentialMode || XNORsequentialMode) {
 				double capBL = lengthCol * 0.2e-15/1e-6;
 				double colRamp = 0;
@@ -867,12 +866,13 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatency += dff.readLatency;
 				
 				// Write
+				/***
 				writeLatency = 0;
 				writeLatencyArray = 0;
 				writeLatencyArray += totalNumWritePulse * cell.writePulseWidth;
 				writeLatency += MAX(wlDecoder.writeLatency + wlNewDecoderDriver.writeLatency + wlDecoderDriver.writeLatency, slSwitchMatrix.writeLatency);
 				writeLatency += writeLatencyArray;
-				
+				***/
 			} else if (BNNparallelMode || XNORparallelMode) {
 				double capBL = lengthCol * 0.2e-15/1e-6;
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
@@ -898,12 +898,13 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatency += multilevelSAEncoder.readLatency;
 				
 				// Write
+				/***
 				writeLatency = 0;
 				writeLatencyArray = 0;
 				writeLatencyArray += totalNumWritePulse * cell.writePulseWidth;
 				writeLatency += MAX(wlNewSwitchMatrix.writeLatency + wlSwitchMatrix.writeLatency, slSwitchMatrix.writeLatency);
 				writeLatency += writeLatencyArray;
-				
+				***/
 			} else {
 				double capBL = lengthCol * 0.2e-15/1e-6;
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
@@ -932,11 +933,13 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				readLatency += shiftAdd.readLatency;
 
 				// Write
+				/***
 				writeLatency = 0;
 				writeLatencyArray = 0;
 				writeLatencyArray += totalNumWritePulse * cell.writePulseWidth;
 				writeLatency += MAX(wlNewSwitchMatrix.writeLatency + wlSwitchMatrix.writeLatency, slSwitchMatrix.writeLatency);
 				writeLatency += writeLatencyArray;
+				***/
 			}
 		}
 	}
@@ -998,10 +1001,12 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergyOther = wlDecoder.readDynamicEnergy;
 
 				// Write
+				/***
 				writeDynamicEnergy += wlDecoder.writeDynamicEnergy;
 				writeDynamicEnergy += precharger.writeDynamicEnergy;
 				writeDynamicEnergy += sramWriteDriver.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage += wlDecoder.leakage;
@@ -1038,10 +1043,12 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergyOther = wlSwitchMatrix.readDynamicEnergy;
 				
 				// Write
+				/***
 				writeDynamicEnergy += wlSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += precharger.writeDynamicEnergy;
 				writeDynamicEnergy += sramWriteDriver.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage += wlSwitchMatrix.leakage;
@@ -1072,10 +1079,12 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += senseAmp.readDynamicEnergy;
 				
 				// Write
+				/***
 				writeDynamicEnergy += wlDecoder.writeDynamicEnergy;
 				writeDynamicEnergy += precharger.writeDynamicEnergy;
 				writeDynamicEnergy += sramWriteDriver.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage += wlDecoder.leakage;
@@ -1103,10 +1112,12 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += multilevelSAEncoder.readDynamicEnergy;
 				
 				// Write
+				/***
 				writeDynamicEnergy += wlSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += precharger.writeDynamicEnergy;
 				writeDynamicEnergy += sramWriteDriver.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage += wlSwitchMatrix.leakage;
@@ -1136,10 +1147,12 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
 
 				// Write
+				/***
 				writeDynamicEnergy += wlSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += precharger.writeDynamicEnergy;
 				writeDynamicEnergy += sramWriteDriver.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage += wlSwitchMatrix.leakage;
@@ -1154,7 +1167,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 	    } else if (cell.memCellType == Type::RRAM || cell.memCellType == Type::FeFET) {
 			if (conventionalSequential) {
 				double numReadCells = (int)ceil((double)numCol/numColMuxed);    // similar parameter as numReadCellPerOperationNeuro, which is for SRAM
-				double numWriteCells = (int)ceil((double)numCol/numWriteColMuxed); 
+				double numWriteCells = (int)ceil((double)numCol/*numWriteColMuxed*/); 
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
 				double capBL = lengthCol * 0.2e-15/1e-6;
 				
@@ -1198,15 +1211,15 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergyOther = wlDecoder.readDynamicEnergy + wlNewDecoderDriver.readDynamicEnergy + wlDecoderDriver.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
 
 				// Write
+				/***
 				writeDynamicEnergyArray = writeDynamicEnergyArray;
-			
 				writeDynamicEnergy = 0;
 				writeDynamicEnergy += wlDecoder.writeDynamicEnergy;
 				writeDynamicEnergy += wlNewDecoderDriver.writeDynamicEnergy;
 				writeDynamicEnergy += wlDecoderDriver.writeDynamicEnergy;
 				writeDynamicEnergy += slSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
-				
+				***/
 				// Leakage
 				leakage = 0;
 				leakage += wlDecoder.leakage;
@@ -1261,13 +1274,14 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergyOther = wlNewSwitchMatrix.readDynamicEnergy + wlSwitchMatrix.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
 				
 				// Write
+				/***
 				writeDynamicEnergyArray = writeDynamicEnergyArray;
-			
 				writeDynamicEnergy = 0;
 				writeDynamicEnergy += wlNewSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += wlSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += slSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage = 0;
@@ -1281,7 +1295,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				leakage += shiftAdd.leakage;
 			} else if (BNNsequentialMode || XNORsequentialMode) {
 				double numReadCells = (int)ceil((double)numCol/numColMuxed);    // similar parameter as numReadCellPerOperationNeuro, which is for SRAM
-				double numWriteCells = (int)ceil((double)numCol/numWriteColMuxed); 
+				double numWriteCells = (int)ceil((double)numCol/*numWriteColMuxed*/); 
 				int numWriteOperationPerRow = (int)ceil((double)numCol*activityColWrite/numWriteCellPerOperationNeuro);
 				double capBL = lengthCol * 0.2e-15/1e-6;
 			
@@ -1316,14 +1330,15 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += readDynamicEnergyArray;
 
 				// Write
+				/***
 				writeDynamicEnergyArray = writeDynamicEnergyArray;
-			
 				writeDynamicEnergy = 0;
 				writeDynamicEnergy += wlDecoder.writeDynamicEnergy;
 				writeDynamicEnergy += wlNewDecoderDriver.writeDynamicEnergy;
 				writeDynamicEnergy += wlDecoderDriver.writeDynamicEnergy;
 				writeDynamicEnergy += slSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage = 0;
@@ -1369,13 +1384,14 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += readDynamicEnergyArray;
 
 				// Write
+				/***
 				writeDynamicEnergyArray = writeDynamicEnergyArray;
-			
 				writeDynamicEnergy = 0;
 				writeDynamicEnergy += wlNewSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += wlSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += slSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage = 0;
@@ -1422,13 +1438,14 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += readDynamicEnergyArray;
 				
 				// Write
+				/***
 				writeDynamicEnergyArray = writeDynamicEnergyArray;
-			
 				writeDynamicEnergy = 0;
 				writeDynamicEnergy += wlNewSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += wlSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += slSwitchMatrix.writeDynamicEnergy;
 				writeDynamicEnergy += writeDynamicEnergyArray;
+				***/
 				
 				// Leakage
 				leakage = 0;
@@ -1453,7 +1470,7 @@ void SubArray::PrintProperty() {
 	    cout << "Array:" << endl;
 	    cout << "Area = " << heightArray*1e6 << "um x " << widthArray*1e6 << "um = " << areaArray*1e12 << "um^2" << endl;
 	    cout << "Read Dynamic Energy = " << readDynamicEnergyArray*1e12 << "pJ" << endl;
-	    cout << "Write Dynamic Energy = " << writeDynamicEnergyArray*1e12 << "pJ" << endl;
+	    //cout << "Write Dynamic Energy = " << writeDynamicEnergyArray*1e12 << "pJ" << endl;
 		
 		precharger.PrintProperty("precharger");
 		sramWriteDriver.PrintProperty("sramWriteDriver");
@@ -1497,8 +1514,8 @@ void SubArray::PrintProperty() {
 	    cout << "Array:" << endl;
 	    cout << "Area = " << heightArray*1e6 << "um x " << widthArray*1e6 << "um = " << areaArray*1e12 << "um^2" << endl;
 	    cout << "Read Dynamic Energy = " << readDynamicEnergyArray*1e12 << "pJ" << endl;
-	    cout << "Write Dynamic Energy = " << writeDynamicEnergyArray*1e12 << "pJ" << endl;
-		cout << "Write Latency = " << writeLatencyArray*1e9 << "ns" << endl;
+	    //cout << "Write Dynamic Energy = " << writeDynamicEnergyArray*1e12 << "pJ" << endl;
+		//cout << "Write Latency = " << writeLatencyArray*1e9 << "ns" << endl;
 
 		if (conventionalSequential) {
 			wlDecoder.PrintProperty("wlDecoder");

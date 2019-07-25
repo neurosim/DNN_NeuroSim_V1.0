@@ -120,20 +120,6 @@ void ReadCircuit::CalculateUnitArea() {
 		double hTg, wTg, h1, w1, h2, w2, h3, w3, h4, w4, h5, w5, h6, w6, h7, w7, h8, w8, hBufInv, wBufInv;
 		// Read circuit body
 		if (mode == CMOS) {
-			// Analytical estimation
-			//CalculateGateArea(INV, 1, widthTgN, widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &hTg, &wTg);
-			//CalculateGateArea(INV, 1, widthNmos1, widthPmos1, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &h1, &w1);
-			//CalculateGateArea(INV, 1, widthNmos2, 0, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &h2, &w2);
-			//CalculateGateArea(INV, 1, widthNmos3, widthPmos3, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &h3, &w3);
-			//CalculateGateArea(INV, 1, widthNmos4, widthPmos4, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &h4, &w4);
-			//CalculateGateArea(INV, 1, widthNmos5, widthPmos5, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &h5, &w5);
-			//CalculateGateArea(INV, 1, widthNmos6, 0, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &h6, &w6);
-			//CalculateGateArea(INV, 1, widthNmos7, 0, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &h7, &w7);
-			//CalculateGateArea(INV, 1, widthNmos8, widthPmos8, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &h8, &w8);
-			//CalculateGateArea(INV, 1, widthInvN, widthInvP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &hBufInv, &wBufInv);
-			//wReadBody = wTg + w1 + w2 + w3 + w4 + w5 + w6 + w7 + w8 + wBufInv * 2;
-			//hReadBody = hTg;
-			
 			// Just use the dimension from layout
 			hReadBody = MAX_TRANSISTOR_HEIGHT * tech.featureSize;
 			wReadBody = 20 * (POLY_WIDTH + MIN_GAP_BET_GATE_POLY) * tech.featureSize;   // Need 21 polys
@@ -178,7 +164,7 @@ void ReadCircuit::CalculateArea(double _newWidth) {	// Just add up the area of a
 	} else {
 		if (_newWidth) {	// Need to put read circuit units in multiple rows if there is a limitation on total width
 			if (wUnit > _newWidth) {
-				cout << "[ReadCircuit] Error: width too small even for 1 read circuit" << endl;
+				cout << "[ReadCircuit] Error: ReadCircuit width is even larger than the assigned width !" << endl;
 			}
 			numUnitPerRow = (int)(_newWidth/wUnit);
 			if (numUnitPerRow > numReadCol) {
@@ -202,10 +188,8 @@ void ReadCircuit::CalculateLatency(double numRead) {
 		cout << "[ReadCircuit] Error: Require initialization first!" << endl;
 	} else {
 		readLatency = 0;
-		
 		readLatency += cell.readPulseWidth;
 		readLatency += 1/clkFreq;
-		
 		readLatency *= numRead;
 	}
 }
@@ -232,30 +216,13 @@ void ReadCircuit::CalculatePower(double numof1, double numof2, double numof3, do
 			leakage += CalculateGateLeakage(INV, 1, widthNmos8, widthPmos8, inputParameter.temperature, tech) * tech.vdd;
 			// Buffer
 			leakage += CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd * 2;
-
-			// SPICE result	(65nm tech node)
-			//leakage += 104.9e-6;
-
 		} else {	// mode==OSCILLATION, only one INV
-			// Analytical result
-			//leakage += CalculateGateLeakage(INV, 1, widthInvN, widthInvP, inputParameter.temperature, tech) * tech.vdd;
-
-			// SPICE result (65nm tech node)
 			leakage += 35.84e-9;
 		}
-
 		leakage *= numReadCol;
-
 		readDynamicEnergy += numof1*4.74e-14 + numof2*4.20e-14 + numof3*4.14e-14 + numof4*4.11e-14 + numof5*4.10e-14 + numof6*4.09e-14 + numof7*4.09e-14 + numof8*4.08e-14 + numof9*4.08e-14 + numof10*4.08e-14;
 		readDynamicEnergy += numof20*4.07e-14 + numof30*4.06e-14 + numof40*4.06e-14 + numof50*4.05e-14 + numof60*4.05e-14 + numof70*4.05e-14 + numof80*4.05e-14 + numof90*4.05e-14 + numof100*4.05e-14;
-		
 		readDynamicEnergy *= numRead;
-
-		if (!readLatency) {
-			//cout << "[ReadCircuit] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
 	}
 }
 

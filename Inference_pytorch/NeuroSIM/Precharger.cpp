@@ -79,6 +79,9 @@ void Precharger::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 		if (_newWidth && _option==NONE) {
 			int numRowUnit;  // Number of rows of unit
 			int numUnitPerRow;
+			if (_newWidth < wUnit) {
+				cout << "[Precharger] Error: Precharger width is even larger than the assigned width !" << endl;
+			}
 			numUnitPerRow = (int)(_newWidth/wUnit);
 			if (numUnitPerRow > numCol) {
 				numUnitPerRow = numCol;

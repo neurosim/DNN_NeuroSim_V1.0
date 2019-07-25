@@ -87,6 +87,14 @@ void SenseAmp::CalculateArea(double _newHeight, double _newWidth, AreaModify _op
 		area += (wSenseP * hSenseP) * 2 + (wSenseN * hSenseN) * 2 + wSenseIso * hSenseIso + wSenseEn * hSenseEn;
 		area *= numCol;
 		
+		if (_newWidth && _option==NONE) {
+			width = _newWidth;
+			height = area/width;
+		} else if (_newHeight && _option==NONE) {
+			height = _newHeight;
+			width = area/height;
+		}
+		
 		// Modify layout
 		newHeight = _newHeight;
 		newWidth = _newWidth;
