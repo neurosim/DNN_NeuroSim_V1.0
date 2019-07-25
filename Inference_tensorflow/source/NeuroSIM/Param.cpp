@@ -47,7 +47,7 @@
 #include "Param.h"
 
 Param::Param() {
-	
+	/***************************************** user defined design options and parameters *****************************************/
 	operationmode = 2;     		// 1: conventionalSequential (Use several multi-bit RRAM as one synapse)
 								// 2: conventionalParallel (Use several multi-bit RRAM as one synapse)
 	
@@ -55,7 +55,7 @@ Param::Param() {
 								// 2: cell.memCellType = Type::RRAM
 								// 3: cell.memCellType = Type::FeFET
 	
-	accesstype = 4;         	// 1: cell.accessType = CMOS_access
+	accesstype = 1;         	// 1: cell.accessType = CMOS_access
 								// 2: cell.accessType = BJT_access
 								// 3: cell.accessType = diode_access
 								// 4: cell.accessType = none_access (Crossbar Array)
@@ -64,80 +64,82 @@ Param::Param() {
 								// 2: inputParameter.transistorType = FET_2D
 								// 3: inputParameter.transistorType = TFET
 	
-	deviceroadmap = 1;      	// 1: inputParameter.deviceRoadmap = HP
+	deviceroadmap = 2;      	// 1: inputParameter.deviceRoadmap = HP
 								// 2: inputParameter.deviceRoadmap = LSTP
 								
-	globalBufferType = true;   // false: register file
+	globalBufferType = true;    // false: register file
 								// true: SRAM
 								
-	tileBufferType = true;     // false: register file
+	tileBufferType = true;      // false: register file
 								// true: SRAM
 								
-	peBufferType = true;       // false: register file
+	peBufferType = true;        // false: register file
 								// true: SRAM
 	
-	chipActivation = false;      // false: activation (reLu/sigmoid) inside Tile
+	chipActivation = true;      // false: activation (reLu/sigmoid) inside Tile
 								// true: activation outside Tile
 								
 	reLu = true;                // false: sigmoid
 								// true: reLu
 								
-	novelMapping = false;       // false: conventional mapping
+	novelMapping = true;        // false: conventional mapping
 								// true: novel mapping
-								
-	numRowSubArray = 64;       // # of rows in single subArray
-	numColSubArray = 64;       // # of columns in single subArray
 	
-	heightInFeatureSizeSRAM = 8;                  // SRAM Cell height in feature size
-	widthInFeatureSizeSRAM = 20;                     // SRAM Cell width in feature size
+	/*** algorithm weight range, the default wrapper (based on WAGE) has fixed weight range of (-1, 1) ***/
+	algoWeightMax = 1;
+	algoWeightMin = -1;
+	
+	/*** conventional hardware design options ***/
+	clkFreq = 1e9;                      // Clock frequency
+	featuresize = 40e-9;                // Wire width for subArray simulation
+	temp = 301;                         // Temperature (K)
+	technode = 32;                      // Technology
+	wireWidth = 40;                     // wireWidth of the cell for Accuracy calculation
+	globalBusDelayTolerance = 0.1;      // to relax bus delay for global H-Tree (chip level: communication among tiles), if tolerance is 0.1, the latency will be relax to (1+0.1)*optimalLatency (trade-off with energy)
+	localBusDelayTolerance = 0.1;       // to relax bus delay for global H-Tree (tile level: communication among PEs), if tolerance is 0.1, the latency will be relax to (1+0.1)*optimalLatency (trade-off with energy)
+	treeFoldedRatio = 4;                // the H-Tree is assumed to be able to folding in layout (save area)
+	maxGlobalBusWidth = 2048;           // the max buswidth allowed on chip level (just a upper_bound, the actual bus width is defined according to the auto floorplan)
+
+	numRowSubArray = 128;               // # of rows in single subArray
+	numColSubArray = 128;               // # of columns in single subArray
+	
+	/*** option to relax subArray layout ***/
+	relaxArrayCellHeight = 0;           // relax ArrayCellHeight or not
+	relaxArrayCellWidth = 0;            // relax ArrayCellWidth or not
+	
+	numColMuxed = 8;                    // How many columns share 1 ADC (for eNVM and FeFET) or parallel SRAM
+	levelOutput = 32;                   // # of levels of the multilevelSenseAmp output, should be in 2^N forms; e.g. 32 levels --> 5-bit ADC
+	cellBit = 4;                        // precision of memory device 
+	
+	/*** parameters for SRAM ***/
+	heightInFeatureSizeSRAM = 8;        // SRAM Cell height in feature size
+	widthInFeatureSizeSRAM = 20;        // SRAM Cell width in feature size
 	widthSRAMCellNMOS = 2.08;                              
 	widthSRAMCellPMOS = 1.23;
 	widthAccessCMOS = 1.31;
 	minSenseVoltage = 0.1;
 	
-	heightInFeatureSize1T1R = 4;                    // 1T1R Cell height in feature size
-	widthInFeatureSize1T1R = 4;                     // 1T1R Cell width in feature size
-	heightInFeatureSizeCrossbar = 2;                // Crossbar Cell height in feature size
-	widthInFeatureSizeCrossbar = 2;                 // Crossbar Cell width in feature size
+	/*** parameters for analog synaptic devices ***/
+	heightInFeatureSize1T1R = 4;        // 1T1R Cell height in feature size
+	widthInFeatureSize1T1R = 4;         // 1T1R Cell width in feature size
+	heightInFeatureSizeCrossbar = 2;    // Crossbar Cell height in feature size
+	widthInFeatureSizeCrossbar = 2;     // Crossbar Cell width in feature size
 	
-	relaxArrayCellHeight = 0;         // relax ArrayCellHeight or not
-	relaxArrayCellWidth = 0;          // relax ArrayCellWidth or not
-	
-	globalBusDelayTolerance = 0.1;
-	localBusDelayTolerance = 0.1;
-	treeFoldedRatio = 4;
-	maxGlobalBusWidth = 2048;    // the max buswidth allowed on top-level
-	clkFreq = 1e9;               // Clock frequency
-	featuresize = 40e-9;         // Wire width for subArray simulation
-	temp = 301;                  // Temperature (K)
-	technode = 32;               // Technology
-	wireWidth = 40;                                    // wireWidth of the cell for Accuracy calculation
-	readNoise = 0.15;	                               // Sigma of read noise in gaussian distribution
-	resistanceOn = 100e3;        // Ron resistance at Vr in the reported measurement data (need to recalculate below if considering the nonlinearity)
-	resistanceOff = 10e6;        // Roff resistance at Vr in the reported measurement dat (need to recalculate below if considering the nonlinearity)
+	resistanceOn = 500e3;               // Ron resistance at Vr in the reported measurement data (need to recalculate below if considering the nonlinearity)
+	resistanceOff = 500e3*100;           // Roff resistance at Vr in the reported measurement dat (need to recalculate below if considering the nonlinearity)
 	maxConductance = (double) 1/resistanceOn;
 	minConductance = (double) 1/resistanceOff;
-	maxNumLevelLTP = 97;	                            // Maximum number of conductance states during LTP or weight increase
-	maxNumLevelLTD = 100;	                            // Maximum number of conductance states during LTD or weight decrease
-	readVoltage = 0.5;	                                // On-chip read voltage for memory cell
-	readPulseWidth = 10e-9;
-	accessVoltage = 0.1;                                       // Gate voltage for the transistor in 1T1R
-	resistanceAccess = 15e3;
-	multipleCells = 1;                                         // Value should be N^2 such as 1, 4, 9 ...etc
-	nonlinearIV = 0;                                           // This option is to consider I-V nonlinearity in cross-point array or not
-	nonlinearity = 10;                                         // This is the nonlinearity for the current ratio at Vw and Vw/2
-	writeVoltage = 100e-9;
-	writePulseWidth = 2;
-	numWritePulse = 1;           // Only for memory mode (no trace-based)
 	
-	neuro = 1;                   // Neuromorphic mode
-	multifunctional = 0;         // Multifunctional mode (not relevant for IMEC)            
-	parallelWrite = 0;           // Parallel write for crossbar RRAM in neuromorphic mode (not relevant for IMEC)
-	numlut = 32;                 // # of LUT (not relevant for IMEC)
-	numColMuxed = 8;             // How many columns share 1 read circuit (for neuro mode with analog RRAM) or 1 S/A (for memory mode or neuro mode with digital RRAM)
-	numWriteColMuxed = 4;        // How many columns share 1 write column decoder driver (for memory or neuro mode with digital RRAM)
-	levelOutput = 16;             // # of levels of the multilevelSenseAmp output 
-	cellBit = 1;                 // precision of memory device 
+	readVoltage = 0.5;	                // On-chip read voltage for memory cell
+	readPulseWidth = 10e-9;             // read pulse width in sec
+	accessVoltage = 1.1;                // Gate voltage for the transistor in 1T1R
+	resistanceAccess = 15e3;            // resistance of access CMOS in 1T1R
+	
+	/***************************************** user defined design options and parameters *****************************************/
+	
+	
+	
+	/***************************************** Initialization of parameters NO need to modify *****************************************/
 	
 	if (memcelltype == 1) {
 		cellBit = 1;             // force cellBit = 1 for all SRAM cases
@@ -195,8 +197,7 @@ Param::Param() {
 		unitLengthWireResistance =  Rho / ( wireWidth*1e-9 * wireWidth*1e-9 * AR );
 		wireResistanceRow = unitLengthWireResistance * wireLengthRow;
 		wireResistanceCol = unitLengthWireResistance * wireLengthCol;
-		
 	}
-	
+	/***************************************** Initialization of parameters NO need to modify *****************************************/
 }
 

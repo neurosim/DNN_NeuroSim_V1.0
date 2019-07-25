@@ -177,12 +177,6 @@ void ShiftAdd::CalculatePower(double numRead) {
 			readDynamicEnergy += dff.readDynamicEnergy;
 			leakage += dff.leakage;
 		}
-
-		if (!readLatency) {
-			//cout << "[ShiftAdd] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
 	}
 }
 

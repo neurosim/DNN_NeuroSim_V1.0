@@ -61,6 +61,7 @@ public:
 	double writePulseWidth, numWritePulse;
 	double globalBusDelayTolerance, localBusDelayTolerance;
 	double treeFoldedRatio, maxGlobalBusWidth;
+	double algoWeightMax, algoWeightMin;
 	
 	int neuro, multifunctional, parallelWrite, parallelRead;
 	int numlut, numColMuxed, numWriteColMuxed, levelOutput, avgWeightBit, numBitInput;

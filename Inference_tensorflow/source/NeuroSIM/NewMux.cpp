@@ -76,7 +76,7 @@ void NewMux::CalculateArea(double _newHeight, double _newWidth, AreaModify _opti
 			numRowTgPair = 1;
 			double minCellWidth = 2 * (POLY_WIDTH + MIN_GAP_BET_GATE_POLY) * tech.featureSize; // min standard cell width for 1 Tg
 			if (minCellWidth > _newWidth) {
-				cout << "[NewMux] Error: pass gate width is even larger than the array width" << endl;
+				cout << "[NewMux] Error: NewMux width is even larger than the assigned width !" << endl;
 			}
 
 			int numTgPairPerRow = (int)(_newWidth / (minCellWidth*2));    // Get max # Tg pair per row (this is not the final # Tg pair per row because the last row may have less # Tg)
@@ -137,7 +137,6 @@ void NewMux::CalculateLatency(double _rampInput, double _capLoad, double numRead
 		tr = resTg*2 * (capTgDrain + 0.5*capTgGateN + 0.5*capTgGateP + capLoad);	// Calibration: use resTg*2 (only one transistor is transmitting signal in the pass gate) may be more accurate, and include gate cap because the voltage at the source of NMOS and drain of PMOS is changing (assuming Cg = 0.5Cgs + 0.5Cgd)
 		readLatency += 2.3 * tr;	// 2.3 means charging from 0% to 90%
 		readLatency *= numRead;
-
 		writeLatency = cell.writePulseWidth;     // write latency determined by write pulse width
 		writeLatency *= numWrite;
 	}
@@ -158,12 +157,6 @@ void NewMux::CalculatePower(double numRead, double numWrite, double numWritePuls
 		readDynamicEnergy *= numRead;
 		readDynamicEnergy *= activityRowRead;
 		
-		if (!readLatency) {
-			//cout << "[NewMux] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
-		
 		// Write dynamic energy (2-step write and average case half SET and half RESET)
 		if (mode_1T1R) {
 			// LTP
@@ -178,12 +171,6 @@ void NewMux::CalculatePower(double numRead, double numWrite, double numWritePuls
 			writeDynamicEnergy += (capTgDrain * 2) * cell.writeVoltage/2 * cell.writeVoltage/2 * numInput * (1-activityColWrite);   // Total unselected columns in LTP and LTD within the 2-step write
 			writeDynamicEnergy += (capTgGateN + capTgGateP) * tech.vdd * tech.vdd * numInput;
 		}
-	   
-	    if (!writeLatency) {
-		    //cout << "[NewMux] Error: Need to calculate write latency first" << endl;
-	    } else {
-		    writePower = writeDynamicEnergy/writeLatency;
-	    }
 	}
 }
 

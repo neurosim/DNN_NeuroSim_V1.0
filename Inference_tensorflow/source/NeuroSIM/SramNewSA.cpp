@@ -74,7 +74,6 @@ void SramNewSA::CalculateArea(double _newHeight, double _newWidth, AreaModify _o
 		area = areaUnit * numCol;
 		height = area/width;
 		
-		
 		// Modify layout
 		newHeight = _newHeight;
 		newWidth = _newWidth;

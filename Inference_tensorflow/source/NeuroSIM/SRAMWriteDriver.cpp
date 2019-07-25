@@ -76,6 +76,9 @@ void SRAMWriteDriver::CalculateArea(double _newHeight, double _newWidth, AreaMod
 		if (_newWidth && _option==NONE) {
 			int numRowUnit;  // Number of rows of unit
 			int numUnitPerRow;
+			if (wUnit > _newWidth) {
+				cout << "[SRAMWriteDriver] Error: SRAMWriteDriver width is even larger than the assigned width !" << endl;
+			}
 			numUnitPerRow = (int)(_newWidth/wUnit);
 			if (numUnitPerRow > numCol) {
 				numUnitPerRow = numCol;

@@ -222,12 +222,6 @@ void SwitchMatrix::CalculatePower(double numRead, double numWrite) {
 		readDynamicEnergy *= numRead;
 		readDynamicEnergy += dff.readDynamicEnergy;
 		
-		if (!readLatency) {
-			//cout << "[Switch Matrix] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
-		
 		// Write dynamic energy (2-step write and average case half SET and half RESET)
 		if (cell.accessType == CMOS_access) {	// 1T1R
 
@@ -291,11 +285,6 @@ void SwitchMatrix::CalculatePower(double numRead, double numWrite) {
 		}
 		writeDynamicEnergy *= numWrite;
 		writeDynamicEnergy += dff.readDynamicEnergy;	// Use DFF read energy here because no write in the DFF module
-		if (!writeLatency) {
-			//cout << "[Switch Matrix] Error: Need to calculate write latency first" << endl;
-		} else {
-			writePower = writeDynamicEnergy/writeLatency;
-		}
 	}
 }
 

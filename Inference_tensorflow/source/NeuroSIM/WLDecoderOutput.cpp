@@ -92,7 +92,6 @@ void WLDecoderOutput::CalculateArea(double _newHeight, double _newWidth, AreaMod
 
 		if (_newHeight && _option==NONE) {
 			int numColTg = 1;
-			
 			// Adjust TG height based on _newHeight if necessary
 			double TgHeight = _newHeight / numWLRow;
 			if (TgHeight < minCellHeight) {
@@ -215,23 +214,12 @@ void WLDecoderOutput::CalculatePower(double numRead, double numWrite) {
 			readDynamicEnergy += capTgDrain * cell.accessVoltage * cell.accessVoltage * (numWLRow-1);
 		}
 		readDynamicEnergy *= numRead;
-		if (!readLatency) {
-			//cout << "[WLDecoderOutput] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
 		
 		// Write dynamic energy (only one row activated)
 		writeDynamicEnergy += capNorInput * tech.vdd * tech.vdd;
 		writeDynamicEnergy += (capInvOutput + capTgGateN) * tech.vdd * tech.vdd;
 		writeDynamicEnergy += capTgDrain * cell.accessVoltage * cell.accessVoltage;
 		writeDynamicEnergy *= numWrite;
-		if (!writeLatency) {
-			//cout << "[WLDecoderOutput] Error: Need to calculate write latency first" << endl;
-		} else {
-			writePower = writeDynamicEnergy/writeLatency;
-		}
-
 	}
 }
 

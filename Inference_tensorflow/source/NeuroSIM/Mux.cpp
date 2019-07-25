@@ -84,13 +84,17 @@ void Mux::CalculateArea(double _newHeight, double _newWidth, AreaModify _option)
 			CalculateGateArea(INV, 1, widthTgN, widthTgP, tech.featureSize*MAX_TRANSISTOR_HEIGHT, tech, &hTg, &wTg);
 			if (_newWidth && _option==NONE) { // Tg in multiple rows given the total width
 				// Calculate the number of Tg per row
-				int numTgPerRow = (int)(_newWidth/wTg);
-				if (numTgPerRow > numTg) {
-					numTgPerRow = numTg;
+				if (_newWidth < wTg) {
+					cout << "[Mux] Error: Mux width is even larger than the assigned width !" << endl;
+				} else {
+					int numTgPerRow = (int)(_newWidth/wTg);
+					if (numTgPerRow > numTg) {
+						numTgPerRow = numTg;
+					}
+					numRowTg = (int)ceil((double)numTg / numTgPerRow);
+					width = _newWidth;
+					height = hTg * numRowTg;
 				}
-				numRowTg = (int)ceil((double)numTg / numTgPerRow);
-				width = _newWidth;
-				height = hTg * numRowTg;
 			} else {    // Assume one row of Tg by default
 				width = wTg * numTg;
 				height = hTg;
@@ -100,7 +104,7 @@ void Mux::CalculateArea(double _newHeight, double _newWidth, AreaModify _option)
 				numRowTg = 1;
 				double minCellWidth = 2 * (POLY_WIDTH + MIN_GAP_BET_GATE_POLY) * tech.featureSize; // min standard cell width
 				if (minCellWidth > _newWidth) {
-					cout << "[Mux] Error: pass gate width is even larger than the array width" << endl;
+					cout << "[Mux] Error: Mux width is even larger than the assigned width !" << endl;
 				}
 
 				int numTgPerRow = (int)(_newWidth / minCellWidth);	// Get max # Tg per row (this is not the final # Tg per row because the last row may have less # Tg)
@@ -162,7 +166,6 @@ void Mux::CalculateLatency(double _rampInput, double _capLoad, double numRead) {
 		// TG
 		tr = resTg*2 * (capTgDrain + 0.5*capTgGateN + 0.5*capTgGateP + capLoad);	// Calibration: use resTg*2 (only one transistor is transmitting signal in the pass gate) may be more accurate, and include gate cap because the voltage at the source of NMOS and drain of PMOS is changing (assuming Cg = 0.5Cgs + 0.5Cgd)
 		readLatency += 2.3 * tr;	// 2.3 means charging from 0% to 90%
-
 		readLatency *= numRead;
 	}
 }
@@ -173,19 +176,10 @@ void Mux::CalculatePower(double numRead) {
 	} else {
 		leakage = 0;
 		readDynamicEnergy = 0;
-
 		// TG gates only
 		readDynamicEnergy += capTgGateN * numInput * tech.vdd * tech.vdd;	// Selected pass gates (OFF to ON)
 		readDynamicEnergy += (capTgDrain * 2) * numInput * cell.readVoltage * cell.readVoltage;	// Selected pass gates (OFF to ON)
-		//readDynamicEnergy += capTgGateP * numInput * tech.vdd * tech.vdd;	// Deselected pass gates (ON to OFF)
-		
 		readDynamicEnergy *= numRead;
-		if (!readLatency) {
-			//cout << "[Mux] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
-
 	}
 }
 

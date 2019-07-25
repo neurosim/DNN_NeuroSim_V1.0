@@ -123,14 +123,7 @@ void VoltageSenseAmp::CalculatePower(double numRead) {
 		// Dynamic energy
 		readDynamicEnergy = 9.845e-15 * (tech.vdd / 1.1) * (tech.vdd / 1.1);	// 65nm tech node
 		readDynamicEnergy *= numReadCol;
-		
 		readDynamicEnergy *= numRead;
-		if (!readLatency) {
-			//cout << "[VoltageSenseAmp] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
-
 	}
 }
 

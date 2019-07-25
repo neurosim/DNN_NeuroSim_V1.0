@@ -138,6 +138,9 @@ void RowDecoder::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 
 		if (mode == REGULAR_ROW) {	// Connect to rows
 			if (_newHeight && _option==NONE) {
+				if ((hNor > _newHeight) || (hNand > _newHeight) || (hInv > _newHeight)) {
+					cout << "[Row Decoder] Error: Row Decoder width is even larger than the assigned width !" << endl;
+				}
 				// NOR
 				numColNor = 0;	// Number of columns of NOR
 				numNorPerCol = (int)(_newHeight/hNor);
@@ -163,9 +166,7 @@ void RowDecoder::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 					numInvPerCol = numInv;
 				}
 				numColInv = (int)ceil((double)numInv/numInvPerCol);
-				if (numNorPerCol * numNandPerCol * numInvPerCol == 0 && numAddrRow > 2) { // If either of them is zero and not because of no NOR and no NAND2
-					cout << "[Row Decoder] Error: logic gate height is even larger than the assigned height" << endl;
-				}
+				
 				height = _newHeight;
 				width = wInv * numColInv + wNand * numColNand + M3_PITCH * numMetalConnection * tech.featureSize + wNor * numColNor;
 				if (MUX) {    // Mux enable circuit (NAND + INV) + INV
@@ -173,7 +174,6 @@ void RowDecoder::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 				} else {    // REGULAR: 2 INV as output driver
 					width += (wDriverInv * 2) * numColNor;
 				}
-
 			} else {
 				height = MAX(hNor*numNor, hNand*numNand);
 				width = wInv + wNand + M3_PITCH * numMetalConnection * tech.featureSize + wNor;
@@ -185,6 +185,11 @@ void RowDecoder::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 			}
 		} else {	// mode==REGULAR_COL
 			if (_newWidth && _option==NONE) {
+				
+				if ((wNor > _newWidth) || (wNand > _newWidth) || (wInv > _newWidth)) {
+					cout << "[Row Decoder] Error: Row Decoder width is even larger than the assigned width !" << endl;
+				}
+				
 				// NOR
 				numRowNor = 0;  // Number of rows of NOR
 				numNorPerRow = (int)(_newWidth/wNor);
@@ -211,9 +216,6 @@ void RowDecoder::CalculateArea(double _newHeight, double _newWidth, AreaModify _
 				}
 				numRowInv = (int)ceil((double)numInv/numInvPerRow);
 
-				if (numNorPerRow * numNandPerRow * numInvPerRow == 0 && numAddrRow > 2) { // If either of them is zero and not because of no NOR and no NAND2
-					cout << "[Row Decoder] Error: logic gate width is even larger than the assigned width" << endl;
-				}
 				width = _newWidth;
 				height = hInv * numRowInv + hNand * numRowNand + M2_PITCH * numMetalConnection * tech.featureSize + hNor * numRowNor;
 				if (MUX) {    // Mux enable circuit (NAND + INV) + INV
@@ -423,7 +425,6 @@ void RowDecoder::CalculatePower(double numRead, double numWrite) {
 		else
 			writeDynamicEnergy += (capNorOutput + capInvInput) * tech.vdd * tech.vdd;	// one NOR output activated
 		
-		
 		// Output driver or Mux enable circuit
 		if (MUX) {
 			readDynamicEnergy += (capNandOutput + capInvInput) * tech.vdd * tech.vdd;
@@ -437,22 +438,8 @@ void RowDecoder::CalculatePower(double numRead, double numWrite) {
 			readDynamicEnergy += (capDriverInvInput + capDriverInvOutput) * tech.vdd * tech.vdd * 2;
 			writeDynamicEnergy += (capDriverInvInput + capDriverInvOutput) * tech.vdd * tech.vdd * 2;
 		}
-
 		readDynamicEnergy *= numRead;
-		if (!readLatency) {
-			//cout << "[Row Decoder] Error: Need to calculate read latency first" << endl;
-		} else {
-			readPower = readDynamicEnergy/readLatency;
-		}
-		
-		// Write dynamic energy
 		writeDynamicEnergy *= numWrite;
-		if (!writeLatency) {
-			//cout << "[Row Decoder] Error: Need to calculate write latency first" << endl;
-		} else {
-			writePower = writeDynamicEnergy/writeLatency;
-		}
-
 	}
 }
 
