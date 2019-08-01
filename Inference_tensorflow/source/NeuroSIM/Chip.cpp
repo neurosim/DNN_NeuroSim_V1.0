@@ -873,8 +873,8 @@ vector<vector<double> > SubArrayDup(double desiredPESizeCM, double desiredPESize
 			if ( (netStructure[i][2]*numRowPerSynapse <= desiredPESizeNM)||(netStructure[i][5]*numColPerSynapse <= desiredPESizeNM) ) {
 				int arrayForOneMatrixRow = ceil((double) netStructure[i][2]*(double) numRowPerSynapse/(double) param->numRowSubArray);
 				int arrayForOneMatrixCol = ceil((double) netStructure[i][5]*(double) numColPerSynapse/(double) param->numColSubArray);
-				int numSubArrayRow = ceil((double) desiredPESizeCM/(double) param->numRowSubArray);
-				int numSubArrayCol = ceil((double) desiredPESizeCM/(double) param->numColSubArray);
+				int numSubArrayRow = ceil((double) desiredPESizeNM/(double) param->numRowSubArray);
+				int numSubArrayCol = ceil((double) desiredPESizeNM/(double) param->numColSubArray);
 				actualDupRow = floor(numSubArrayRow/arrayForOneMatrixRow)==0? 1:floor(numSubArrayRow/arrayForOneMatrixRow);
 				actualDupCol = floor(numSubArrayCol/arrayForOneMatrixCol)==0? 1:floor(numSubArrayCol/arrayForOneMatrixCol);
 			} else {
