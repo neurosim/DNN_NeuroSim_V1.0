@@ -173,6 +173,10 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 		
 			/*** Tile Design ***/
 			*desiredPESizeNM = MAX(maxPESizeNM, 2*param->numRowSubArray);
+			vector<double> initialDesignNM;
+			initialDesignNM = TileDesignNM((*desiredPESizeNM), markNM, netStructure, numRowPerSynapse, numColPerSynapse, numPENM);
+			*desiredNumTileNM = initialDesignNM[0];
+			
 			for (double thisPESize = MAX(maxPESizeNM, 2*param->numRowSubArray); thisPESize> 2*param->numRowSubArray; thisPESize/=2) {
 				// for layers use novel mapping
 				double thisUtilization = 0;
@@ -186,6 +190,10 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 				}
 			}
 			*desiredTileSizeCM = MAX(maxTileSizeCM, 4*param->numRowSubArray);
+			vector<double> initialDesignCM;
+			initialDesignCM = TileDesignCM((*desiredTileSizeCM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
+			*desiredNumTileCM = initialDesignCM[0];
+			
 			for (double thisTileSize = MAX(maxTileSizeCM, 4*param->numRowSubArray); thisTileSize > 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
@@ -226,6 +234,10 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 		} else {
 			/*** Tile Design ***/
 			*desiredTileSizeCM = MAX(maxTileSizeCM, 4*param->numRowSubArray);
+			vector<double> initialDesign;
+			initialDesign = TileDesignCM((*desiredTileSizeCM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
+			*desiredNumTileCM = initialDesign[0];
+			
 			for (double thisTileSize = MAX(maxTileSizeCM, 4*param->numRowSubArray); thisTileSize > 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
