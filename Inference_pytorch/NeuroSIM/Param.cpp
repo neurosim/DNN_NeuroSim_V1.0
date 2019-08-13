@@ -50,12 +50,16 @@ Param::Param() {
 	/***************************************** user defined design options and parameters *****************************************/
 	operationmode = 2;     		// 1: conventionalSequential (Use several multi-bit RRAM as one synapse)
 								// 2: conventionalParallel (Use several multi-bit RRAM as one synapse)
+								// 3: sequential BNN
+								// 4: parallel BNN
+								// 5: sequential XNOR
+								// 6: parallel XNOR
 	
 	memcelltype = 2;        	// 1: cell.memCellType = Type::SRAM
 								// 2: cell.memCellType = Type::RRAM
 								// 3: cell.memCellType = Type::FeFET
 	
-	accesstype = 1;         	// 1: cell.accessType = CMOS_access
+	accesstype = 4;         	// 1: cell.accessType = CMOS_access
 								// 2: cell.accessType = BJT_access
 								// 3: cell.accessType = diode_access
 								// 4: cell.accessType = none_access (Crossbar Array)
@@ -67,22 +71,22 @@ Param::Param() {
 	deviceroadmap = 2;      	// 1: inputParameter.deviceRoadmap = HP
 								// 2: inputParameter.deviceRoadmap = LSTP
 								
-	globalBufferType = true;    // false: register file
+	globalBufferType = false;    // false: register file
 								// true: SRAM
 								
-	tileBufferType = true;      // false: register file
+	tileBufferType = false;      // false: register file
 								// true: SRAM
 								
-	peBufferType = true;        // false: register file
+	peBufferType = false;        // false: register file
 								// true: SRAM
 	
-	chipActivation = true;      // false: activation (reLu/sigmoid) inside Tile
+	chipActivation = false;      // false: activation (reLu/sigmoid) inside Tile
 								// true: activation outside Tile
 								
 	reLu = true;                // false: sigmoid
 								// true: reLu
 								
-	novelMapping = true;        // false: conventional mapping
+	novelMapping = false;        // false: conventional mapping
 								// true: novel mapping
 	
 	/*** algorithm weight range, the default wrapper (based on WAGE) has fixed weight range of (-1, 1) ***/
@@ -100,16 +104,16 @@ Param::Param() {
 	treeFoldedRatio = 4;                // the H-Tree is assumed to be able to folding in layout (save area)
 	maxGlobalBusWidth = 2048;           // the max buswidth allowed on chip level (just a upper_bound, the actual bus width is defined according to the auto floorplan)
 
-	numRowSubArray = 128;               // # of rows in single subArray
-	numColSubArray = 128;               // # of columns in single subArray
+	numRowSubArray = 64;               // # of rows in single subArray
+	numColSubArray = 64;               // # of columns in single subArray
 	
 	/*** option to relax subArray layout ***/
 	relaxArrayCellHeight = 0;           // relax ArrayCellHeight or not
 	relaxArrayCellWidth = 0;            // relax ArrayCellWidth or not
 	
 	numColMuxed = 8;                    // How many columns share 1 ADC (for eNVM and FeFET) or parallel SRAM
-	levelOutput = 32;                   // # of levels of the multilevelSenseAmp output, should be in 2^N forms; e.g. 32 levels --> 5-bit ADC
-	cellBit = 4;                        // precision of memory device 
+	levelOutput = 16;                   // # of levels of the multilevelSenseAmp output, should be in 2^N forms; e.g. 32 levels --> 5-bit ADC
+	cellBit = 2;                        // precision of memory device 
 	
 	/*** parameters for SRAM ***/
 	heightInFeatureSizeSRAM = 8;        // SRAM Cell height in feature size
@@ -144,20 +148,30 @@ Param::Param() {
 	if (memcelltype == 1) {
 		cellBit = 1;             // force cellBit = 1 for all SRAM cases
 	} 
+	
 
 	/*** initialize operationMode as default ***/
-	conventionalParallel = 0;               
-	conventionalSequential = 0;            
+	conventionalParallel = 0;
+	conventionalSequential = 0;
+	BNNparallelMode = 0;                // parallel BNN
+	BNNsequentialMode = 0;              // sequential BNN
+	conventionalParallel = 0;           // Use several multi-bit RRAM as one synapse
+	conventionalSequential = 0;         // Use several multi-bit RRAM as one synapse
 	switch(operationmode) {
+		case 6:	    XNORparallelMode = 1;               break;     
+		case 5:	    XNORsequentialMode = 1;             break;     
+		case 4:	    BNNparallelMode = 1;                break;     
+		case 3:	    BNNsequentialMode = 1;              break;    
 		case 2:	    conventionalParallel = 1;           break;     
 		case 1:	    conventionalSequential = 1;         break;    
 		case -1:	break;
 		default:	exit(-1);
 	}
 	
+	
 	/*** parallel read ***/
 	parallelRead = 0;
-	if(conventionalParallel) {
+	if(conventionalParallel || BNNparallelMode || XNORparallelMode) {
 		parallelRead = 1;
 	} else {
 		parallelRead = 0;
