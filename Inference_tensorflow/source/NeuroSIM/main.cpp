@@ -63,12 +63,12 @@ vector<vector<double> > getNetStructure(const string &inputfile);
 int main(int argc, char * argv[]) {   
 
 	auto start = chrono::high_resolution_clock::now();
-
+	
 	gen.seed(0);
 	
 	vector<vector<double> > netStructure;
 	netStructure = getNetStructure(argv[1]);
-
+	
 	// define weight/input/memory precision from wrapper
 	param->synapseBit = atoi(argv[2]);              // precision of synapse weight
 	param->numBitInput = atoi(argv[3]);             // precision of input neural activation
@@ -76,8 +76,9 @@ int main(int argc, char * argv[]) {
 		cout << "ERROR!: Memory precision is even higher than synapse precision, please modify 'cellBit' in Param.cpp!" << endl;
 		param->cellBit = param->synapseBit;
 	}
-	param->numColPerSynapse = ceil((double)param->synapseBit/(double)param->cellBit); 
+	
 	param->numRowPerSynapse = 1;
+	param->numColPerSynapse = ceil((double)param->synapseBit/(double)param->cellBit); 
 	
 	double maxPESizeNM, maxTileSizeCM, numPENM;
 	vector<int> markNM;
@@ -312,7 +313,7 @@ vector<vector<double> > getNetStructure(const string &inputfile) {
 	ifstream infile(inputfile.c_str());      
 	string inputline;
 	string inputval;
-
+	
 	int ROWin=0, COLin=0;      
 	if (!infile.good()) {        
 		cerr << "Error: the input file cannot be opened!" << endl;

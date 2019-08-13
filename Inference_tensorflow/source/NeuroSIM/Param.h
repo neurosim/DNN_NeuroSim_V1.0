@@ -51,7 +51,7 @@ public:
 	
 	int relaxArrayCellHeight, relaxArrayCellWidth;
 	
-	bool globalBufferType, tileBufferType, peBufferType, chipActivation, reLu, novelMapping;
+	bool globalBufferType, tileBufferType, peBufferType, chipActivation, reLu, novelMapping, pipeline;
 	
 	double clkFreq, featuresize, readNoise, resistanceOn, resistanceOff, maxConductance, minConductance;
 	int temp, technode, wireWidth, multipleCells;
@@ -67,6 +67,7 @@ public:
 	int numlut, numColMuxed, numWriteColMuxed, levelOutput, avgWeightBit, numBitInput;
 	int numRowSubArray, numColSubArray;
 	int cellBit, synapseBit;
+	int speedUpDegree;
 	
 	int XNORparallelMode, XNORsequentialMode, BNNparallelMode, BNNsequentialMode, conventionalParallel, conventionalSequential; 
 	int numRowPerSynapse, numColPerSynapse;

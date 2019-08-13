@@ -135,7 +135,7 @@ vector<int> ChipDesignInitialize(InputParameter& inputParameter, Technology& tec
 			*maxTileSizeCM = max(minCube, (*maxTileSizeCM));
 		}
 	}
-
+	
 	return markNM;
 }
 
@@ -166,7 +166,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 	*numTileRow = 0;
 	*numTileCol = 0;
 
-	if (param->novelMapping) {   // Novel Mapping
+	if (param->novelMapping) {		// Novel Mapping
 		if (maxPESizeNM < 2*param->numRowSubArray) {
 			cout << "ERROR: SubArray Size is too large, which break the chip hierarchey, please decrease the SubArray size! " << endl;
 		}else{
@@ -176,7 +176,6 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			vector<double> initialDesignNM;
 			initialDesignNM = TileDesignNM((*desiredPESizeNM), markNM, netStructure, numRowPerSynapse, numColPerSynapse, numPENM);
 			*desiredNumTileNM = initialDesignNM[0];
-			
 			for (double thisPESize = MAX(maxPESizeNM, 2*param->numRowSubArray); thisPESize> 2*param->numRowSubArray; thisPESize/=2) {
 				// for layers use novel mapping
 				double thisUtilization = 0;
@@ -193,7 +192,6 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			vector<double> initialDesignCM;
 			initialDesignCM = TileDesignCM((*desiredTileSizeCM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
 			*desiredNumTileCM = initialDesignCM[0];
-			
 			for (double thisTileSize = MAX(maxTileSizeCM, 4*param->numRowSubArray); thisTileSize > 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
@@ -219,7 +217,6 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 					*desiredPESizeCM = thisPESize;
 				}
 			}
-
 			peDup = PEDesign(false, (*desiredPESizeCM), (*desiredTileSizeCM), (*desiredNumTileCM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
 			/*** SubArray Duplication ***/
 			subArrayDup = SubArrayDup((*desiredPESizeCM), (*desiredPESizeNM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
@@ -237,7 +234,6 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			vector<double> initialDesign;
 			initialDesign = TileDesignCM((*desiredTileSizeCM), markNM, netStructure, numRowPerSynapse, numColPerSynapse);
 			*desiredNumTileCM = initialDesign[0];
-			
 			for (double thisTileSize = MAX(maxTileSizeCM, 4*param->numRowSubArray); thisTileSize > 4*param->numRowSubArray; thisTileSize/=2) {
 				// for layers use conventional mapping
 				double thisUtilization = 0;
@@ -272,7 +268,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 			speedUpEachLayer = OverallEachLayer(false, true, peDup, subArrayDup, (*desiredTileSizeCM), 0, markNM, netStructure, numRowPerSynapse, numColPerSynapse, numPENM);
 		}
 	}
-
+	
 	*numTileRow = ceil((double)sqrt((double)(*desiredNumTileCM)+(double)(*desiredNumTileNM)));
 	*numTileCol = ceil((double)((*desiredNumTileCM)+(*desiredNumTileNM))/(double)(*numTileRow));
 	
@@ -292,7 +288,7 @@ vector<vector<double> > ChipFloorPlan(bool findNumTile, bool findUtilization, bo
 	}
 	tileLocaEachLayer.push_back(tileLocaEachLayerRow);
 	tileLocaEachLayer.push_back(tileLocaEachLayerCol);
-
+	
 	if (findNumTile) {
 		return numTileEachLayer;
 	} else if (findUtilization) {
@@ -823,7 +819,6 @@ vector<vector<double> > PEDesign(bool Design, double peSize, double desiredTileS
 				actualDupRow = floor(numPERow/peForOneMatrixRow)==0? 1:floor(numPERow/peForOneMatrixRow);
 				actualDupCol = floor(numPECol/peForOneMatrixCol)==0? 1:floor(numPECol/peForOneMatrixCol);
 				matrixTotalCM += actualDupRow*actualDupCol*netStructure[i][2]*netStructure[i][3]*netStructure[i][4]*numRowPerSynapse*netStructure[i][5]*numColPerSynapse;
-				
 			} else {
 				actualDupRow = 1;
 				actualDupCol = 1;
@@ -1028,22 +1023,47 @@ vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPer
 				// map and expend the weight in memory array
 				int cellrange = pow(2, param->cellBit);
 				vector<double> synapsevector(numColPerSynapse);       
-				int value = newdata;                  
-				int remainder;   
-				for (int z=0; z<numColPerSynapse; z++) {   
-					remainder = ceil((double)(value%cellrange));
-					value = ceil((double)(value/cellrange));
-					synapsevector.insert(synapsevector.begin(), remainder);
+				int value = newdata; 
+				if (param->BNNparallelMode) {
+					if (value == 1) {
+						weightrow.push_back(maxConductance);
+						weightrow.push_back(minConductance);
+					} else {
+						weightrow.push_back(minConductance);
+						weightrow.push_back(maxConductance);
+					}
+				} else if (param->XNORparallelMode || param->XNORsequentialMode) {
+					if (value == 1) {
+						weightrow.push_back(maxConductance);
+						weightrowb.push_back(minConductance);
+					} else {
+						weightrow.push_back(minConductance);
+						weightrowb.push_back(maxConductance);
+					}
+				} else {
+					int remainder;   
+					for (int z=0; z<numColPerSynapse; z++) {   
+						remainder = ceil((double)(value%cellrange));
+						value = ceil((double)(value/cellrange));
+						synapsevector.insert(synapsevector.begin(), remainder);
+					}
+					for (int u=0; u<numColPerSynapse; u++) {
+						double cellvalue = synapsevector[u];
+						double conductance = cellvalue/(cellrange-1) * (maxConductance-minConductance) + minConductance;
+						weightrow.push_back(conductance);
+					}
 				}
-				for (int u=0; u<numColPerSynapse; u++) {
-					double cellvalue = synapsevector[u];
-					double conductance = cellvalue/(cellrange-1) * (maxConductance-minConductance) + minConductance;
-					weightrow.push_back(conductance);
-				}		
-			}			
-		}		
-		weight.push_back(weightrow);
-		weightrow.clear();
+			}
+		}
+		if (param->XNORparallelMode || param->XNORsequentialMode) {
+			weight.push_back(weightrow);
+			weightrow.clear();
+			weight.push_back(weightrowb);
+			weightrowb.clear();
+		} else {
+			weight.push_back(weightrow);
+			weightrow.clear();
+		}
 	}
 	fileone.close();
 	
@@ -1131,12 +1151,36 @@ vector<vector<double> > LoadInInputData(const string &inputfile) {
 				istringstream fs;
 				fs.str(inputval);
 				double f=0;
-				fs >> f;	
-				inputvectorrow.push_back(f);
-			}			
-		}		
-		inputvector.push_back(inputvectorrow);
-		inputvectorrow.clear();
+				fs >> f;
+				
+				if (param->BNNparallelMode) {
+					if (f == 1) {
+						inputvectorrow.push_back(1);
+					} else {
+						inputvectorrow.push_back(0);
+					}
+				} else if (param->XNORparallelMode || param->XNORsequentialMode) {
+					if (f == 1) {
+						inputvectorrow.push_back(1);
+						inputvectorrowb.push_back(0);
+					} else {
+						inputvectorrow.push_back(0);
+						inputvectorrowb.push_back(1);
+					}
+				} else {
+					inputvectorrow.push_back(f);
+				}
+			}
+		}
+		if (param->XNORparallelMode || param->XNORsequentialMode) {
+			inputvector.push_back(inputvectorrow);
+			inputvectorrow.clear();
+			inputvector.push_back(inputvectorrowb);
+			inputvectorrowb.clear();
+		} else {
+			inputvector.push_back(inputvectorrow);
+			inputvectorrow.clear();
+		}
 	}
 	// close the input file ...
 	infile.close();
