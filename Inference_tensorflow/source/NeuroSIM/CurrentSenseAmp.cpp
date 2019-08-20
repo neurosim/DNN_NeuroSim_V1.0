@@ -125,8 +125,7 @@ void CurrentSenseAmp::CalculateLatency(const vector<double> &columnResistance, d
 				LatencyCol = 50e-9;
 			}
 		}
-		readLatency += LatencyCol;
-		readLatency /= numCol;
+		readLatency += LatencyCol*numColMuxed;
 		readLatency *= numRead;
 	}
 }
