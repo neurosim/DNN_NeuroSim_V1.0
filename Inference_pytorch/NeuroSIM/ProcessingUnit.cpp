@@ -237,12 +237,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 	*coreLatencyAccum = 0;
 	*coreLatencyOther = 0;
 	
-	double subArrayReadLatency = 0;
-	double subArrayReadDynamicEnergy = 0;
-	double subArrayLeakage = 0;	
-	double subArrayLatencyADC = 0;
-	double subArrayLatencyAccum = 0;
-	double subArrayLatencyOther = 0;
+	double subArrayReadLatency, subArrayReadDynamicEnergy, subArrayLeakage, subArrayLatencyADC, subArrayLatencyAccum, subArrayLatencyOther;
 
 	if (arrayDupRow*arrayDupCol > 1) {
 		// weight matrix is duplicated among subArray
@@ -261,10 +256,15 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 						vector<vector<double> > subArrayInput;
 						subArrayInput = CopySubInput(inputVector, i*param->numRowSubArray, numInVector, numRowMatrix);
 						
-						for (int i=0; i<numInVector; i++) {                 // calculate single subArray through the total input vectors
+						subArrayReadLatency = 0;
+						subArrayLatencyADC = 0;
+						subArrayLatencyAccum = 0;
+						subArrayLatencyOther = 0;
+
+						for (int k=0; k<numInVector; k++) {                 // calculate single subArray through the total input vectors
 							double activityRowRead = 0;
 							vector<double> input; 
-							input = GetInputVector(subArrayInput, i, &activityRowRead);
+							input = GetInputVector(subArrayInput, k, &activityRowRead);
 							subArray->activityRowRead = activityRowRead;
 							
 							int cellRange = pow(2, param->cellBit);
@@ -301,14 +301,13 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 						*coreLatencyADC = MAX(subArrayLatencyADC, (*coreLatencyADC));
 						*coreLatencyAccum = MAX(subArrayLatencyAccum + adderTree->readLatency, (*coreLatencyAccum));
 						*coreLatencyOther = MAX(subArrayLatencyOther, (*coreLatencyOther));
-						
+		
 						*coreEnergyAccum += adderTree->readDynamicEnergy;
 					}
 				}
 			}
 			// considering speedup, the latency of processing each layer is decreased
 			*readLatency = (*readLatency)/(arrayDupRow*arrayDupCol);
-			
 			*coreLatencyADC = (*coreLatencyADC)/(arrayDupRow*arrayDupCol);
 			*coreLatencyAccum = (*coreLatencyAccum)/(arrayDupRow*arrayDupCol);
 			*coreLatencyOther = (*coreLatencyOther)/(arrayDupRow*arrayDupCol);
@@ -318,11 +317,16 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 			subArrayMemory = CopySubArray(newMemory, 0, 0, weightMatrixRow, weightMatrixCol);
 			vector<vector<double> > subArrayInput;
 			subArrayInput = CopySubInput(inputVector, 0, numInVector, weightMatrixRow);
-			
-			for (int i=0; i<numInVector; i++) {                 // calculate single subArray through the total input vectors
+
+			subArrayReadLatency = 0;
+			subArrayLatencyADC = 0;
+			subArrayLatencyAccum = 0;
+			subArrayLatencyOther = 0;
+
+			for (int k=0; k<numInVector; k++) {                 // calculate single subArray through the total input vectors
 				double activityRowRead = 0;
 				vector<double> input;
-				input = GetInputVector(subArrayInput, i, &activityRowRead);
+				input = GetInputVector(subArrayInput, k, &activityRowRead);
 				subArray->activityRowRead = activityRowRead;
 				int cellRange = pow(2, param->cellBit);
 				
@@ -350,10 +354,9 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 				*coreEnergyAccum += subArray->readDynamicEnergyAccum;
 				*coreEnergyOther += subArray->readDynamicEnergyOther;
 			}
+			
 			// do not pass adderTree 
 			*readLatency = subArrayReadLatency/(arrayDupRow*arrayDupCol);
-			//*readDynamicEnergy = subArrayReadDynamicEnergy;
-			
 			*coreLatencyADC = subArrayLatencyADC/(arrayDupRow*arrayDupCol);
 			*coreLatencyAccum = subArrayLatencyAccum/(arrayDupRow*arrayDupCol);
 			*coreLatencyOther = subArrayLatencyOther/(arrayDupRow*arrayDupCol);
@@ -371,10 +374,15 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 					vector<vector<double> > subArrayInput;
 					subArrayInput = CopySubInput(inputVector, i*param->numRowSubArray, numInVector, numRowMatrix);
 					
-					for (int i=0; i<numInVector; i++) {                 // calculate single subArray through the total input vectors
+					subArrayReadLatency = 0;
+					subArrayLatencyADC = 0;
+					subArrayLatencyAccum = 0;
+					subArrayLatencyOther = 0;
+					
+					for (int k=0; k<numInVector; k++) {                 // calculate single subArray through the total input vectors
 						double activityRowRead = 0;
 						vector<double> input;
-						input = GetInputVector(subArrayInput, i, &activityRowRead);
+						input = GetInputVector(subArrayInput, k, &activityRowRead);
 						subArray->activityRowRead = activityRowRead;
 						
 						int cellRange = pow(2, param->cellBit);
@@ -401,21 +409,22 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 						*coreEnergyADC += subArray->readDynamicEnergyADC;
 						*coreEnergyAccum += subArray->readDynamicEnergyAccum;
 						*coreEnergyOther += subArray->readDynamicEnergyOther;
+						
 					}
-					adderTree->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
-					adderTree->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
-
-					*readLatency = max(subArrayReadLatency + adderTree->readLatency, (*readLatency));
-					*readDynamicEnergy += adderTree->readDynamicEnergy;
-					
+					*readLatency = max(subArrayReadLatency, (*readLatency));
 					*coreLatencyADC = MAX(subArrayLatencyADC, (*coreLatencyADC));
-					*coreLatencyAccum = MAX(subArrayLatencyAccum + adderTree->readLatency, (*coreLatencyAccum));
+					*coreLatencyAccum = MAX(subArrayLatencyAccum, (*coreLatencyAccum));
 					*coreLatencyOther = MAX(subArrayLatencyOther, (*coreLatencyOther));
-					
-					*coreEnergyAccum += adderTree->readDynamicEnergy;
 				}
 			}
 		}
+		adderTree->CalculateLatency((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray), 0);
+		adderTree->CalculatePower((int)(numInVector/param->numBitInput)*param->numColMuxed, ceil((double) weightMatrixRow/(double) param->numRowSubArray));
+		*readLatency += adderTree->readLatency;
+		*coreLatencyAccum += adderTree->readLatency;
+		*readDynamicEnergy += adderTree->readDynamicEnergy;
+		*coreEnergyAccum += adderTree->readDynamicEnergy;
+		
 	}
 	//considering buffer activation: no matter speedup or not, the total number of data transferred is fixed
 	
