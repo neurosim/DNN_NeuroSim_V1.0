@@ -252,7 +252,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 					if ((i*param->numRowSubArray < weightMatrixRow) && (j*param->numColSubArray < weightMatrixCol) && (i*param->numRowSubArray < weightMatrixRow) ) {
 						// assign weight and input to specific subArray
 						vector<vector<double> > subArrayMemory;
-						subArrayMemory = CopySubArray(newMemory, i*param->numRowSubArray, i*param->numColSubArray, numRowMatrix, numColMatrix);
+						subArrayMemory = CopySubArray(newMemory, i*param->numRowSubArray, j*param->numColSubArray, numRowMatrix, numColMatrix);
 						vector<vector<double> > subArrayInput;
 						subArrayInput = CopySubInput(inputVector, i*param->numRowSubArray, numInVector, numRowMatrix);
 						
