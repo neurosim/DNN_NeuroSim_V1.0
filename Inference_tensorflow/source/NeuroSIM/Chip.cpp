@@ -662,8 +662,8 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				double tileEnergyAccum = 0;
 				double tileEnergyOther = 0;
 
-				int numRowMatrix = netStructure[l][2]*netStructure[l][3]*netStructure[l][4]*numRowPerSynapse/numTileEachLayer[0][l];
-				int numColMatrix = netStructure[l][5]*numRowPerSynapse/numTileEachLayer[1][l];
+				int numRowMatrix = min(desiredPESizeNM*ceil(sqrt((double)numPENM)), weightMatrixRow-i*desiredPESizeNM*ceil(sqrt((double)numPENM)));
+				int numColMatrix = min(desiredPESizeNM*ceil(sqrt((double)numPENM)), weightMatrixCol-j*desiredTileSizeCM);
 				
 				// assign weight and input to specific tile
 				vector<vector<double> > tileMemory;
