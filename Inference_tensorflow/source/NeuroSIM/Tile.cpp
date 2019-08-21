@@ -391,7 +391,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 		
 		*coreLatencyOther += (inputBuffer->readLatency + inputBuffer->writeLatency + outputBuffer->readLatency + outputBuffer->writeLatency + hTree->readLatency);
 		*coreEnergyOther += inputBuffer->readDynamicEnergy + inputBuffer->writeDynamicEnergy + outputBuffer->readDynamicEnergy + outputBuffer->writeDynamicEnergy + hTree->readDynamicEnergy;
-		
+		*leakage = PEleakage*numPE*numPE + accumulation->leakage + inputBuffer->leakage + outputBuffer->leakage;
 	} else {  // novel Mapping
 		for (int i=0; i<numPE; i++) {
 			if (i*peSize < weightMatrixRow) {
@@ -491,8 +491,8 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 		
 		*coreLatencyOther += (inputBuffer->readLatency + inputBuffer->writeLatency + outputBuffer->readLatency + outputBuffer->writeLatency + hTree->readLatency);
 		*coreEnergyOther += inputBuffer->readDynamicEnergy + inputBuffer->writeDynamicEnergy + outputBuffer->readDynamicEnergy + outputBuffer->writeDynamicEnergy + hTree->readDynamicEnergy;
+		*leakage = PEleakage*numPE + accumulation->leakage + inputBuffer->leakage + outputBuffer->leakage;
 	}
-	*leakage = PEleakage*numPE*numPE + accumulation->leakage + inputBuffer->leakage + outputBuffer->leakage;
 }
 
 
