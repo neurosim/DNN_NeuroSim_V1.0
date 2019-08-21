@@ -467,15 +467,19 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 	maxPool->CalculateArea(globalBuffer->width);
 	Gaccumulation->CalculateArea(NULL, globalBuffer->height/3, NONE);
 	
+	double areaGreLu = 0;
+	double areaGsigmoid = 0;
 	
 	if (param->chipActivation) {
 		if (param->reLu) {
 			GreLu->CalculateArea(NULL, globalBuffer->width/3, NONE);
 			area += GreLu->area;
+			areaGreLu += GreLu->area;
 		} else {
 			Gsigmoid->CalculateUnitArea(NONE);
 			Gsigmoid->CalculateArea(NULL, globalBuffer->width/3, NONE);
 			area += Gsigmoid->area;
+			areaGsigmoid += Gsigmoid->area;
 		}
 	}
 	
@@ -485,7 +489,7 @@ vector<double> ChipCalculateArea(InputParameter& inputParameter, Technology& tec
 	areaResults.push_back(areaIC);
 	areaResults.push_back(areaADC);
 	areaResults.push_back(areaAccum + Gaccumulation->area);
-	areaResults.push_back(areaOther + globalBuffer->area + GhTree->area + maxPool->area);
+	areaResults.push_back(areaOther + globalBuffer->area + GhTree->area + maxPool->area + areaGreLu + areaGsigmoid);
 	
 	*height = sqrt(area);
 	*width = area/(*height);
