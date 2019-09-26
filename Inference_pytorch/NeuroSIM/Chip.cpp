@@ -585,24 +585,24 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				*coreEnergyADC += tileEnergyADC;
 				*coreEnergyAccum += tileEnergyAccum;
 				*coreEnergyOther += tileEnergyOther;
-
-				if (param->chipActivation) {
-					if (param->reLu) {
-						GreLu->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
-						GreLu->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
-						*readLatency += GreLu->readLatency;
-						*readDynamicEnergy += GreLu->readDynamicEnergy;
-						*coreLatencyOther += GreLu->readLatency;
-						*coreEnergyOther += GreLu->readDynamicEnergy;
-					} else {
-						Gsigmoid->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
-						Gsigmoid->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
-						*readLatency += Gsigmoid->readLatency;
-						*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
-						*coreLatencyOther += Gsigmoid->readLatency;
-						*coreEnergyOther += Gsigmoid->readDynamicEnergy;
-					}
-				}
+			}
+		}
+		
+		if (param->chipActivation) {
+			if (param->reLu) {
+				GreLu->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
+				GreLu->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
+				*readLatency += GreLu->readLatency;
+				*readDynamicEnergy += GreLu->readDynamicEnergy;
+				*coreLatencyOther += GreLu->readLatency;
+				*coreEnergyOther += GreLu->readDynamicEnergy;
+			} else {
+				Gsigmoid->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
+				Gsigmoid->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
+				*readLatency += Gsigmoid->readLatency;
+				*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
+				*coreLatencyOther += Gsigmoid->readLatency;
+				*coreEnergyOther += Gsigmoid->readDynamicEnergy;
 			}
 		}
 		
@@ -694,24 +694,23 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				*coreEnergyADC += tileEnergyADC;
 				*coreEnergyAccum += tileEnergyAccum;
 				*coreEnergyOther += tileEnergyOther;
-
-				if (param->chipActivation) {
-					if (param->reLu) {
-						GreLu->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
-						GreLu->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
-						*readLatency += GreLu->readLatency;
-						*readDynamicEnergy += GreLu->readDynamicEnergy;
-						*coreLatencyOther += GreLu->readLatency;
-						*coreEnergyOther += GreLu->readDynamicEnergy;
-					} else {
-						Gsigmoid->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
-						Gsigmoid->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
-						*readLatency += Gsigmoid->readLatency;
-						*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
-						*coreLatencyOther += Gsigmoid->readLatency;
-						*coreEnergyOther += Gsigmoid->readDynamicEnergy;
-					}
-				}
+			}
+		}
+		if (param->chipActivation) {
+			if (param->reLu) {
+				GreLu->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
+				GreLu->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
+				*readLatency += GreLu->readLatency;
+				*readDynamicEnergy += GreLu->readDynamicEnergy;
+				*coreLatencyOther += GreLu->readLatency;
+				*coreEnergyOther += GreLu->readDynamicEnergy;
+			} else {
+				Gsigmoid->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
+				Gsigmoid->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
+				*readLatency += Gsigmoid->readLatency;
+				*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
+				*coreLatencyOther += Gsigmoid->readLatency;
+				*coreEnergyOther += Gsigmoid->readDynamicEnergy;
 			}
 		}
 			
