@@ -585,46 +585,45 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				*coreEnergyADC += tileEnergyADC;
 				*coreEnergyAccum += tileEnergyAccum;
 				*coreEnergyOther += tileEnergyOther;
-
-				if (param->chipActivation) {
-					if (param->reLu) {
-						GreLu->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
-						GreLu->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
-						*readLatency += GreLu->readLatency;
-						*readDynamicEnergy += GreLu->readDynamicEnergy;
-						*coreLatencyOther += GreLu->readLatency;
-						*coreEnergyOther += GreLu->readDynamicEnergy;
-					} else {
-						Gsigmoid->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
-						Gsigmoid->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
-						*readLatency += Gsigmoid->readLatency;
-						*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
-						*coreLatencyOther += Gsigmoid->readLatency;
-						*coreEnergyOther += Gsigmoid->readDynamicEnergy;
-					}
-				}
-				
-				if (numTileEachLayer[0][l] > 1) {   
-					Gaccumulation->CalculateLatency(numTileEachLayer[1][l]*param->numColMuxed*(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0);
-					Gaccumulation->CalculatePower(numTileEachLayer[1][l]*param->numColMuxed*(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
-					*readLatency += Gaccumulation->readLatency;
-					*readDynamicEnergy += Gaccumulation->readDynamicEnergy;
-					*coreLatencyAccum += Gaccumulation->readLatency;
-					*coreEnergyAccum += Gaccumulation->readDynamicEnergy;
-				}
-				
-				// if this layer is followed by Max Pool
-				if (followedByMaxPool) {
-					maxPool->CalculateLatency(1e20, 0, ceil((double) desiredTileSizeCM/(double) ((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) maxPool->window)));
-					maxPool->CalculatePower(ceil((double) desiredTileSizeCM/(double) ((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/maxPool->window)));
-					*readLatency += maxPool->readLatency;
-					*readDynamicEnergy += maxPool->readDynamicEnergy;
-					*coreLatencyOther += maxPool->readLatency;
-					*coreEnergyOther += maxPool->readDynamicEnergy;
-				}
-				
 			}
 		}
+		if (param->chipActivation) {
+			if (param->reLu) {
+				GreLu->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
+				GreLu->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
+				*readLatency += GreLu->readLatency;
+				*readDynamicEnergy += GreLu->readDynamicEnergy;
+				*coreLatencyOther += GreLu->readLatency;
+				*coreEnergyOther += GreLu->readDynamicEnergy;
+			} else {
+				Gsigmoid->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
+				Gsigmoid->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
+				*readLatency += Gsigmoid->readLatency;
+				*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
+				*coreLatencyOther += Gsigmoid->readLatency;
+				*coreEnergyOther += Gsigmoid->readDynamicEnergy;
+			}
+		}
+		
+		if (numTileEachLayer[0][l] > 1) {   
+			Gaccumulation->CalculateLatency(numTileEachLayer[1][l]*param->numColMuxed*(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0);
+			Gaccumulation->CalculatePower(numTileEachLayer[1][l]*param->numColMuxed*(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
+			*readLatency += Gaccumulation->readLatency;
+			*readDynamicEnergy += Gaccumulation->readDynamicEnergy;
+			*coreLatencyAccum += Gaccumulation->readLatency;
+			*coreEnergyAccum += Gaccumulation->readDynamicEnergy;
+		}
+
+		// if this layer is followed by Max Pool
+		if (followedByMaxPool) {
+			maxPool->CalculateLatency(1e20, 0, ceil((double) desiredTileSizeCM/(double) ((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) maxPool->window)));
+			maxPool->CalculatePower(ceil((double) desiredTileSizeCM/(double) ((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/maxPool->window)));
+			*readLatency += maxPool->readLatency;
+			*readDynamicEnergy += maxPool->readDynamicEnergy;
+			*coreLatencyOther += maxPool->readLatency;
+			*coreEnergyOther += maxPool->readDynamicEnergy;
+		}
+		
 		GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, 
 								(weightMatrixRow+weightMatrixCol)*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/GhTree->busWidth);
 		GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, GhTree->busWidth, 
@@ -695,44 +694,45 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				*coreEnergyAccum += tileEnergyAccum;
 				*coreEnergyOther += tileEnergyOther;
 
-				if (param->chipActivation) {
-					if (param->reLu) {
-						GreLu->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
-						GreLu->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
-						*readLatency += GreLu->readLatency;
-						*readDynamicEnergy += GreLu->readDynamicEnergy;
-						*coreLatencyOther += GreLu->readLatency;
-						*coreEnergyOther += GreLu->readDynamicEnergy;
-					} else {
-						Gsigmoid->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
-						Gsigmoid->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
-						*readLatency += Gsigmoid->readLatency;
-						*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
-						*coreLatencyOther += Gsigmoid->readLatency;
-						*coreEnergyOther += Gsigmoid->readDynamicEnergy;
-					}
-				}
-				
-				if (numTileEachLayer[0][l] > 1) {   
-					Gaccumulation->CalculateLatency(numTileEachLayer[1][l]*param->numColMuxed*(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0);
-					Gaccumulation->CalculatePower(numTileEachLayer[1][l]*param->numColMuxed*(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
-					*readLatency += Gaccumulation->readLatency;
-					*readDynamicEnergy += Gaccumulation->readDynamicEnergy;
-					*coreLatencyAccum += Gaccumulation->readLatency;
-					*coreEnergyAccum += Gaccumulation->readDynamicEnergy;
-				}
-				
-				// if this layer is followed by Max Pool
-				if (followedByMaxPool) {
-					maxPool->CalculateLatency(1e20, 0, ceil((double) desiredPESizeNM*sqrt((double) numPENM)/(double) ((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) maxPool->window)));
-					maxPool->CalculatePower(ceil((double) desiredPESizeNM*sqrt((double) numPENM)/(double) ((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/maxPool->window)));
-					*readLatency += maxPool->readLatency;
-					*readDynamicEnergy += maxPool->readDynamicEnergy;
-					*coreLatencyOther += maxPool->readLatency;
-					*coreEnergyOther += maxPool->readDynamicEnergy;
-				}
 			}
 		}
+		if (param->chipActivation) {
+			if (param->reLu) {
+				GreLu->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
+				GreLu->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) GreLu->numUnit));
+				*readLatency += GreLu->readLatency;
+				*readDynamicEnergy += GreLu->readDynamicEnergy;
+				*coreLatencyOther += GreLu->readLatency;
+				*coreEnergyOther += GreLu->readDynamicEnergy;
+			} else {
+				Gsigmoid->CalculateLatency(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
+				Gsigmoid->CalculatePower(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/Gsigmoid->numEntry));
+				*readLatency += Gsigmoid->readLatency;
+				*readDynamicEnergy += Gsigmoid->readDynamicEnergy;
+				*coreLatencyOther += Gsigmoid->readLatency;
+				*coreEnergyOther += Gsigmoid->readDynamicEnergy;
+			}
+		}
+		
+		if (numTileEachLayer[0][l] > 1) {   
+			Gaccumulation->CalculateLatency(numTileEachLayer[1][l]*param->numColMuxed*(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l], 0);
+			Gaccumulation->CalculatePower(numTileEachLayer[1][l]*param->numColMuxed*(ceil((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) Gaccumulation->numAdderTree)), numTileEachLayer[0][l]);
+			*readLatency += Gaccumulation->readLatency;
+			*readDynamicEnergy += Gaccumulation->readDynamicEnergy;
+			*coreLatencyAccum += Gaccumulation->readLatency;
+			*coreEnergyAccum += Gaccumulation->readDynamicEnergy;
+		}
+
+		// if this layer is followed by Max Pool
+		if (followedByMaxPool) {
+			maxPool->CalculateLatency(1e20, 0, ceil((double) desiredPESizeNM*sqrt((double) numPENM)/(double) ((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/(double) maxPool->window)));
+			maxPool->CalculatePower(ceil((double) desiredPESizeNM*sqrt((double) numPENM)/(double) ((netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/maxPool->window)));
+			*readLatency += maxPool->readLatency;
+			*readDynamicEnergy += maxPool->readDynamicEnergy;
+			*coreLatencyOther += maxPool->readLatency;
+			*coreEnergyOther += maxPool->readDynamicEnergy;
+		}
+
 		*coreLatencyOther -= (*bufferLatency);
 		*coreLatencyOther -= (*icLatency);
 		*readLatency -= ((*bufferLatency) + (*icLatency));
