@@ -430,15 +430,15 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 	
 	// input buffer: total num of data loaded in = weightMatrixRow*numInVector
 	// output buffer: total num of data transferred = weightMatrixRow*numInVector/param->numBitInput (total num of IFM in the PE) *adderTree->numAdderTree*adderTree->numAdderBit (bit precision of OFMs) 
-	bufferInput->CalculateLatency(0, numInVector);
+	bufferInput->CalculateLatency(0, numInVector*ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 	bufferOutput->CalculateLatency(0, numInVector/param->numBitInput);
 	bufferInput->CalculatePower(weightMatrixRow, numInVector);
 	bufferOutput->CalculatePower(weightMatrixCol*adderTree->numAdderBit, numInVector/param->numBitInput);
 
-	busInput->CalculateLatency(weightMatrixRow*numInVector/(busInput->numRow*busInput->busWidth)); 
+	busInput->CalculateLatency(weightMatrixRow*numInVector/(busInput->busWidth)); 
 	busOutput->CalculateLatency((weightMatrixCol*adderTree->numAdderBit*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth)); 
 	
-	busInput->CalculatePower(busInput->numRow*busInput->busWidth, weightMatrixRow*numInVector/(busInput->numRow*busInput->busWidth));
+	busInput->CalculatePower(busInput->busWidth, weightMatrixRow*numInVector/(busInput->busWidth));
 	busOutput->CalculatePower(busOutput->numRow*busOutput->busWidth, (weightMatrixCol*adderTree->numAdderBit*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth));
 	
 	*bufferLatency += bufferInput->readLatency + bufferOutput->readLatency;
