@@ -170,7 +170,7 @@ void Buffer::CalculateLatency(double numAccessBitRead, double numRead, double nu
 			readWholeLatency += ((double) 1/clkFreq/2)*((double) numBit/interface_width);  // assume dff need half clock cycle to access
 			writeWholeLatency += wlDecoder.writeLatency + ((double) 1/clkFreq/2)*((double) numBit/interface_width);
 		}
-		avgBitReadLatency = (double) readWholeLatency/(numBit/interface_width);     // average latency per bit(sec/bit)
+		avgBitReadLatency = (double) readWholeLatency/(numBit/interface_width);     // average latency per line(sec/line)
 		avgBitWriteLatency = (double) writeWholeLatency/(numBit/interface_width);
 		readLatency = avgBitReadLatency*numRead;
 		writeLatency = avgBitWriteLatency*numWrite;
