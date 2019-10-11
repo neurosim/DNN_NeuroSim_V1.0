@@ -131,7 +131,7 @@ void TileInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 		}
 	}
 	
-	inputBuffer->Initialize(param->numBitInput*param->numRowSubArray, numPE*param->numRowSubArray, 1, param->unitLengthWireResistance, param->clkFreq, param->peBufferType);
+	inputBuffer->Initialize(numPE*param->numBitInput*param->numRowSubArray, numPE*param->numRowSubArray, 1, param->unitLengthWireResistance, param->clkFreq, param->peBufferType);
 	hTree->Initialize(numPE, numPE, param->localBusDelayTolerance, numPE*param->numRowSubArray);
 }
 
