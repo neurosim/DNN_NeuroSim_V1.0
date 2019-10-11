@@ -99,8 +99,8 @@ void HTree::Initialize(int _numRow, int _numCol, double _delaytolerance, double 
 	widthInvP = repeaterSize * tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize;
 	
 	/*** define center point ***/
-	x_center = pow(2, floor(log2((double) min(numRow, numCol))));
-	y_center = pow(2, floor(log2((double) min(numRow, numCol))));
+	x_center = floor(log2((double) min(numRow, numCol)));
+	y_center = floor(log2((double) min(numRow, numCol)));
 	int orc = 1;    // over-routing constraint: (important for unbalanced tree) avoid routing outside chip boundray
 	
 	if (numCol-x_center<orc) {

@@ -343,7 +343,7 @@ void ChipInitialize(InputParameter& inputParameter, Technology& tech, MemCell& c
 		globalBusWidth /= 2;
 	}
 	
-	globalBuffer->Initialize(param->numBitInput*maxLayerInput, ceil((double)sqrt(param->numBitInput*maxLayerInput)), 1, param->unitLengthWireResistance, param->clkFreq, param->globalBufferType);
+	globalBuffer->Initialize(param->numBitInput*maxLayerInput, globalBusWidth, 1, param->unitLengthWireResistance, param->clkFreq, param->globalBufferType);
 	maxPool->Initialize(param->numBitInput, 2*2, (desiredTileSizeCM));
 	GhTree->Initialize((numTileRow), (numTileCol), param->globalBusDelayTolerance, globalBusWidth);
 	
@@ -628,11 +628,13 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 								(weightMatrixRow+weightMatrixCol)*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/GhTree->busWidth);
 		GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], CMTileheight, CMTilewidth, GhTree->busWidth, 
 								(weightMatrixRow+weightMatrixCol)/(desiredPESizeCM)*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/GhTree->busWidth);
- 
-		globalBuffer->CalculateLatency(weightMatrixRow*param->numBitInput, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1), 
-								weightMatrixCol*param->numBitInput, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1));
-		globalBuffer->CalculatePower(weightMatrixRow*param->numBitInput, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1), 
-								weightMatrixCol*param->numBitInput, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1));
+
+		double numBitToLoadOut = weightMatrixRow*param->numBitInput*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1);
+		double numBitToLoadIn = weightMatrixCol*param->numBitInput*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1);
+		globalBuffer->CalculateLatency(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
+								numBitToLoadIn, numBitToLoadIn/globalBuffer->interface_width);
+		globalBuffer->CalculatePower(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
+								numBitToLoadIn, numBitToLoadIn/globalBuffer->interface_width);
 		
 		*bufferLatency += globalBuffer->readLatency + globalBuffer->writeLatency;
 		*bufferDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy;
@@ -743,10 +745,12 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 		GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, GhTree->busWidth, 
 								(weightMatrixRow+weightMatrixCol)/(desiredPESizeCM)*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/GhTree->busWidth/netStructure[l][3]);
 
-		globalBuffer->CalculateLatency(weightMatrixRow*param->numBitInput, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][3], 
-								weightMatrixCol*param->numBitInput, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][3]);
-		globalBuffer->CalculatePower(weightMatrixRow*param->numBitInput, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][3], 
-								weightMatrixCol*param->numBitInput, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][3]);
+		double numBitToLoadOut = weightMatrixRow*param->numBitInput*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][3];
+		double numBitToLoadIn = weightMatrixCol*param->numBitInput*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][3];
+		globalBuffer->CalculateLatency(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
+								numBitToLoadIn, numBitToLoadIn/globalBuffer->interface_width);
+		globalBuffer->CalculatePower(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
+								numBitToLoadIn, numBitToLoadIn/globalBuffer->interface_width);
 		
 		*bufferLatency += globalBuffer->readLatency + globalBuffer->writeLatency;
 		*bufferDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy;
