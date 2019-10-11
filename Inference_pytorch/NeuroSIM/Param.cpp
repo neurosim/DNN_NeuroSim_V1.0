@@ -59,7 +59,7 @@ Param::Param() {
 								// 2: cell.memCellType = Type::RRAM
 								// 3: cell.memCellType = Type::FeFET
 	
-	accesstype = 4;         	// 1: cell.accessType = CMOS_access
+	accesstype = 1;         	// 1: cell.accessType = CMOS_access
 								// 2: cell.accessType = BJT_access
 								// 3: cell.accessType = diode_access
 								// 4: cell.accessType = none_access (Crossbar Array)
@@ -80,13 +80,13 @@ Param::Param() {
 	peBufferType = false;        // false: register file
 								// true: SRAM
 	
-	chipActivation = false;      // false: activation (reLu/sigmoid) inside Tile
+	chipActivation = true;      // false: activation (reLu/sigmoid) inside Tile
 								// true: activation outside Tile
 								
 	reLu = true;                // false: sigmoid
 								// true: reLu
 								
-	novelMapping = false;        // false: conventional mapping
+	novelMapping = true;        // false: conventional mapping
 								// true: novel mapping
 	
 	/*** algorithm weight range, the default wrapper (based on WAGE) has fixed weight range of (-1, 1) ***/
@@ -104,16 +104,16 @@ Param::Param() {
 	treeFoldedRatio = 4;                // the H-Tree is assumed to be able to folding in layout (save area)
 	maxGlobalBusWidth = 2048;           // the max buswidth allowed on chip level (just a upper_bound, the actual bus width is defined according to the auto floorplan)
 
-	numRowSubArray = 64;               // # of rows in single subArray
-	numColSubArray = 64;               // # of columns in single subArray
+	numRowSubArray = 128;               // # of rows in single subArray
+	numColSubArray = 128;               // # of columns in single subArray
 	
 	/*** option to relax subArray layout ***/
 	relaxArrayCellHeight = 0;           // relax ArrayCellHeight or not
 	relaxArrayCellWidth = 0;            // relax ArrayCellWidth or not
 	
 	numColMuxed = 8;                    // How many columns share 1 ADC (for eNVM and FeFET) or parallel SRAM
-	levelOutput = 16;                   // # of levels of the multilevelSenseAmp output, should be in 2^N forms; e.g. 32 levels --> 5-bit ADC
-	cellBit = 2;                        // precision of memory device 
+	levelOutput = 32;                   // # of levels of the multilevelSenseAmp output, should be in 2^N forms; e.g. 32 levels --> 5-bit ADC
+	cellBit = 4;                        // precision of memory device 
 	
 	/*** parameters for SRAM ***/
 	heightInFeatureSizeSRAM = 8;        // SRAM Cell height in feature size
