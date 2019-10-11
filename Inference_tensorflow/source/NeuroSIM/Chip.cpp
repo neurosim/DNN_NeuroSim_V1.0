@@ -736,10 +736,6 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 			*coreEnergyOther += maxPool->readDynamicEnergy;
 		}
 		
-		*coreLatencyOther -= (*bufferLatency);
-		*coreLatencyOther -= (*icLatency);
-		*readLatency -= ((*bufferLatency) + (*icLatency));
-		
 		GhTree->CalculateLatency(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, 
 								(weightMatrixRow+weightMatrixCol)*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/GhTree->busWidth/netStructure[l][3]);
 		GhTree->CalculatePower(0, 0, tileLocaEachLayer[0][l], tileLocaEachLayer[1][l], NMTileheight, NMTilewidth, GhTree->busWidth, 
@@ -756,9 +752,6 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 		*bufferDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy;
 		*icLatency += GhTree->readLatency;
 		*icDynamicEnergy += GhTree->readDynamicEnergy;
-		
-		*bufferLatency /= netStructure[l][3];
-		*icLatency /= netStructure[l][3];
 		
 		*readLatency += (*bufferLatency) + (*icLatency);
 		*readDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy + GhTree->readDynamicEnergy;
