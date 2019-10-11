@@ -632,9 +632,9 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 		double numBitToLoadOut = weightMatrixRow*param->numBitInput*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1);
 		double numBitToLoadIn = weightMatrixCol*param->numBitInput*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1);
 		globalBuffer->CalculateLatency(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
-								numBitToLoadIn, numBitToLoadIn/globalBuffer->interface_width);
+								globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 		globalBuffer->CalculatePower(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
-								numBitToLoadIn, numBitToLoadIn/globalBuffer->interface_width);
+								globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 		
 		*bufferLatency += globalBuffer->readLatency + globalBuffer->writeLatency;
 		*bufferDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy;
@@ -748,9 +748,9 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 		double numBitToLoadOut = weightMatrixRow*param->numBitInput*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][3];
 		double numBitToLoadIn = weightMatrixCol*param->numBitInput*(netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)/netStructure[l][3];
 		globalBuffer->CalculateLatency(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
-								numBitToLoadIn, numBitToLoadIn/globalBuffer->interface_width);
+								globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 		globalBuffer->CalculatePower(globalBuffer->interface_width, numBitToLoadOut/globalBuffer->interface_width,
-								numBitToLoadIn, numBitToLoadIn/globalBuffer->interface_width);
+								globalBuffer->interface_width, numBitToLoadIn/globalBuffer->interface_width);
 		
 		*bufferLatency += globalBuffer->readLatency + globalBuffer->writeLatency;
 		*bufferDynamicEnergy += globalBuffer->readDynamicEnergy + globalBuffer->writeDynamicEnergy;
