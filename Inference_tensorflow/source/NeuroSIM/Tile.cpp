@@ -344,7 +344,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 				*readDynamicEnergy += reLu->readDynamicEnergy;
 				*coreLatencyOther += reLu->readLatency;
 				*coreEnergyOther += reLu->readDynamicEnergy;
-				double numBitToLoadIn = weightMatrixCol*(1+reLu->numBit)*numInVector/param->numBitInput;
+				double numBitToLoadIn = MAX(ceil(weightMatrixCol/param->numColPerSynapse)*(1+reLu->numBit)*numInVector/param->numBitInput, 0);
 				outputBuffer->CalculateLatency(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 				outputBuffer->CalculatePower(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 			} else {
@@ -354,18 +354,18 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 				*readDynamicEnergy += sigmoid->readDynamicEnergy;
 				*coreLatencyOther += sigmoid->readLatency;
 				*coreEnergyOther += sigmoid->readDynamicEnergy;
-				double numBitToLoadIn = weightMatrixCol*(1+sigmoid->numYbit)*numInVector/param->numBitInput;
+				double numBitToLoadIn = MAX(ceil(weightMatrixCol/param->numColPerSynapse)*(1+sigmoid->numYbit)*numInVector/param->numBitInput, 0);
 				outputBuffer->CalculateLatency(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 				outputBuffer->CalculatePower(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 			}
 		} else {
-			double numBitToLoadIn = weightMatrixCol*(1+accumulation->numAdderBit)*numInVector/param->numBitInput;
+			double numBitToLoadIn = MAX(ceil(weightMatrixCol/param->numColPerSynapse)*(1+accumulation->numAdderBit)*numInVector/param->numBitInput, 0);
 			outputBuffer->CalculateLatency(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 			outputBuffer->CalculatePower(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 		}
 		
 		//considering buffer activation: no matter speedup or not, the total number of data transferred is fixed
-		double numBitToLoadOut = weightMatrixRow*numInVector;
+		double numBitToLoadOut = MAX(weightMatrixRow*numInVector, 0);
 		inputBuffer->CalculateLatency(inputBuffer->interface_width, numBitToLoadOut/inputBuffer->interface_width, inputBuffer->interface_width, numBitToLoadOut/inputBuffer->interface_width);
 		inputBuffer->CalculatePower(inputBuffer->interface_width, numBitToLoadOut/inputBuffer->interface_width, inputBuffer->interface_width, numBitToLoadOut/inputBuffer->interface_width);
 		*readLatency += (inputBuffer->readLatency + inputBuffer->writeLatency);
@@ -433,7 +433,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 		*coreEnergyAccum += accumulation->readDynamicEnergy;
 		
 		//considering buffer activation: no matter speedup or not, the total number of data transferred is fixed
-		double numBitToLoadOut = weightMatrixRow*numInVector/numPE;
+		double numBitToLoadOut = MAX(weightMatrixRow*numInVector/numPE, 0);
 		inputBuffer->CalculateLatency(inputBuffer->interface_width, numBitToLoadOut/inputBuffer->interface_width, inputBuffer->interface_width, numBitToLoadOut/inputBuffer->interface_width);
 		inputBuffer->CalculatePower(inputBuffer->interface_width, numBitToLoadOut/inputBuffer->interface_width, inputBuffer->interface_width, numBitToLoadOut/inputBuffer->interface_width);
 		
@@ -449,7 +449,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 				*coreLatencyOther += reLu->readLatency;
 				*coreEnergyOther += reLu->readDynamicEnergy;
 				
-				double numBitToLoadIn = weightMatrixCol*(1+reLu->numBit)*numInVector/param->numBitInput/numPE;
+				double numBitToLoadIn = MAX(ceil(weightMatrixCol/param->numColPerSynapse)*(1+reLu->numBit)*numInVector/param->numBitInput/numPE, 0);
 				outputBuffer->CalculateLatency(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 				outputBuffer->CalculatePower(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 			} else {
@@ -459,12 +459,12 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 				*readDynamicEnergy += sigmoid->readDynamicEnergy;
 				*coreLatencyOther += sigmoid->readLatency;
 				*coreEnergyOther += sigmoid->readDynamicEnergy;
-				double numBitToLoadIn = weightMatrixCol*(1+sigmoid->numYbit)*numInVector/param->numBitInput/numPE;
+				double numBitToLoadIn = MAX(ceil(weightMatrixCol/param->numColPerSynapse)*(1+sigmoid->numYbit)*numInVector/param->numBitInput/numPE, 0);
 				outputBuffer->CalculateLatency(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 				outputBuffer->CalculatePower(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 			}
 		} else {
-			double numBitToLoadIn = weightMatrixCol*(1+accumulation->numAdderBit)*numInVector/param->numBitInput/numPE;
+			double numBitToLoadIn = MAX(ceil(weightMatrixCol/param->numColPerSynapse)*(1+accumulation->numAdderBit)*numInVector/param->numBitInput/numPE, 0);
 			outputBuffer->CalculateLatency(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 			outputBuffer->CalculatePower(outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width, outputBuffer->interface_width, numBitToLoadIn/outputBuffer->interface_width);
 		}

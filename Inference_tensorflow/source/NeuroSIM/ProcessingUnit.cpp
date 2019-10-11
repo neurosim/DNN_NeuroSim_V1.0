@@ -438,7 +438,7 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 	busInput->CalculateLatency(weightMatrixRow*numInVector/(busInput->busWidth)); 
 	busOutput->CalculateLatency((weightMatrixCol*adderTree->numAdderBit*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth)); 
 	
-	busInput->CalculatePower(*busInput->busWidth, weightMatrixRow*numInVector/(busInput->busWidth));
+	busInput->CalculatePower(busInput->busWidth, weightMatrixRow*numInVector/(busInput->busWidth));
 	busOutput->CalculatePower(busOutput->numRow*busOutput->busWidth, (weightMatrixCol*adderTree->numAdderBit*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth));
 	
 	*bufferLatency += bufferInput->readLatency + bufferOutput->readLatency;

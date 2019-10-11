@@ -150,6 +150,8 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
 			}
 		} else if (conventionalParallel) {
 			wlSwitchMatrix.Initialize(ROW_MODE, numRow, resCellAccess, true, false, activityRowRead, activityColWrite, numWriteCellPerOperationMemory, numWriteCellPerOperationNeuro, 1, clkFreq);
+			mux.Initialize(ceil(numCol/numColMuxed), numColMuxed, resCellAccess, FPGA);       
+			muxDecoder.Initialize(REGULAR_ROW, (int)ceil(log2(numColMuxed)), true, false);
 			multilevelSenseAmp.Initialize(numCol/numColMuxed, levelOutput, clkFreq, numReadCellPerOperationNeuro, true);
 			multilevelSAEncoder.Initialize(levelOutput, numCol/numColMuxed);
 			if (numReadPulse > 1) {
@@ -340,20 +342,26 @@ void SubArray::CalculateArea() {  //calculate layout area for total design
 				areaOther = wlDecoder.area + sramWriteDriver.area;
 			} else if (conventionalParallel) { 
 				wlSwitchMatrix.CalculateArea(heightArray, NULL, NONE);
+				
+				mux.CalculateArea(NULL, widthArray, NONE);
+				muxDecoder.CalculateArea(NULL, NULL, NONE);
+				double minMuxHeight = MAX(muxDecoder.height, mux.height);
+				mux.CalculateArea(minMuxHeight, widthArray, OVERRIDE);
+				
 				multilevelSenseAmp.CalculateArea(NULL, widthArray, NONE);
 				multilevelSAEncoder.CalculateArea(NULL, widthArray, NONE);
 				if (numReadPulse > 1) {
 					shiftAdd.CalculateArea(NULL, widthArray, NONE);
 				}
-				height = precharger.height + sramWriteDriver.height + heightArray + multilevelSenseAmp.height + multilevelSAEncoder.height + shiftAdd.height;
-				width = wlDecoder.width + widthArray;
+				height = precharger.height + sramWriteDriver.height + heightArray + multilevelSenseAmp.height + multilevelSAEncoder.height + shiftAdd.height + mux.height;
+				width = MAX(wlDecoder.width, muxDecoder.width) + widthArray;
 				area = height * width;
-				usedArea = areaArray + wlDecoder.area + precharger.area + sramWriteDriver.area + multilevelSenseAmp.area + multilevelSAEncoder.area + shiftAdd.area;
+				usedArea = areaArray + wlDecoder.area + precharger.area + sramWriteDriver.area + multilevelSenseAmp.area + multilevelSAEncoder.area + shiftAdd.area + mux.height + muxDecoder.height;
 				emptyArea = area - usedArea;
 				
 				areaADC = multilevelSenseAmp.area + precharger.area + multilevelSAEncoder.area;
 				areaAccum = shiftAdd.area;
-				areaOther = wlSwitchMatrix.area + sramWriteDriver.area;
+				areaOther = wlSwitchMatrix.area + sramWriteDriver.area + mux.area + muxDecoder.area;
 			} else if (BNNsequentialMode || XNORsequentialMode) {
 				wlDecoder.CalculateArea(heightArray, NULL, NONE);  
 				senseAmp.CalculateArea(NULL, widthArray, MAGIC);
@@ -589,6 +597,10 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				wlSwitchMatrix.CalculateLatency(1e20, capRow1, resRow, numColMuxed, 2*numWriteOperationPerRow*numRow*activityRowWrite);
 				precharger.CalculateLatency(1e20, capCol, numColMuxed, numWriteOperationPerRow*numRow*activityRowWrite);
 				sramWriteDriver.CalculateLatency(1e20, capCol, resCol, numWriteOperationPerRow*numRow*activityRowWrite);
+				
+				mux.CalculateLatency(0, 0, numColMuxed);
+				muxDecoder.CalculateLatency(1e20, mux.capTgGateN*ceil(numCol/numColMuxed), mux.capTgGateP*ceil(numCol/numColMuxed), numColMuxed, 0);
+				
 				multilevelSenseAmp.CalculateLatency(columnResistance, numColMuxed, 1);
 				multilevelSAEncoder.CalculateLatency(1e20, numColMuxed);
 				if (numReadPulse > 1) {
@@ -604,7 +616,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				colDelay = horowitz(tau, beta, wlSwitchMatrix.rampOutput, &colRamp) * numReadPulse;
 
 				readLatency = 0;
-				readLatency += wlSwitchMatrix.readLatency;
+				readLatency += MAX(wlSwitchMatrix.readLatency, mux.readLatency+muxDecoder.readLatency);
 				readLatency += precharger.readLatency;
 				readLatency += colDelay;
 				readLatency += multilevelSenseAmp.readLatency;
@@ -613,7 +625,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				
 				readLatencyADC = precharger.readLatency + colDelay + multilevelSenseAmp.readLatency + multilevelSAEncoder.readLatency;
 				readLatencyAccum = shiftAdd.readLatency;
-				readLatencyOther = wlSwitchMatrix.readLatency;
+				readLatencyOther = MAX(wlSwitchMatrix.readLatency, mux.readLatency+muxDecoder.readLatency);
 
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
 				/***
@@ -1022,6 +1034,10 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				wlSwitchMatrix.CalculatePower(numColMuxed, 2*numWriteOperationPerRow*numRow*activityRowWrite);
 				precharger.CalculatePower(numColMuxed, numWriteOperationPerRow*numRow*activityRowWrite);
 				sramWriteDriver.CalculatePower(numWriteOperationPerRow*numRow*activityRowWrite);
+				
+				mux.CalculatePower(numColMuxed);	// Mux still consumes energy during row-by-row read
+				muxDecoder.CalculatePower(numColMuxed, 1);
+				
 				multilevelSenseAmp.CalculatePower(columnResistance, numColMuxed);
 				multilevelSAEncoder.CalculatePower(numColMuxed);
 				if (numReadPulse > 1) {
@@ -1036,11 +1052,13 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += readDynamicEnergyArray;
 				readDynamicEnergy += multilevelSenseAmp.readDynamicEnergy;
 				readDynamicEnergy += multilevelSAEncoder.readDynamicEnergy;
+				readDynamicEnergy += mux.readDynamicEnergy;
+				readDynamicEnergy += muxDecoder.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
 
 				readDynamicEnergyADC = precharger.readDynamicEnergy + readDynamicEnergyArray + multilevelSenseAmp.readDynamicEnergy + multilevelSAEncoder.readDynamicEnergy;
 				readDynamicEnergyAccum = shiftAdd.readDynamicEnergy;
-				readDynamicEnergyOther = wlSwitchMatrix.readDynamicEnergy;
+				readDynamicEnergyOther = wlSwitchMatrix.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
 				
 				// Write
 				/***
