@@ -432,15 +432,20 @@ double ProcessingUnitCalculatePerformance(SubArray *subArray, const vector<vecto
 	// output buffer: total num of data transferred = weightMatrixRow*numInVector/param->numBitInput (total num of IFM in the PE) *adderTree->numAdderTree*adderTree->numAdderBit (bit precision of OFMs) 
 	bufferInput->CalculateLatency(0, numInVector*ceil((double) weightMatrixRow/(double) param->numRowSubArray));
 	bufferOutput->CalculateLatency(0, numInVector/param->numBitInput);
-	bufferInput->CalculatePower(weightMatrixRow, numInVector);
-	bufferOutput->CalculatePower(weightMatrixCol*adderTree->numAdderBit, numInVector/param->numBitInput);
+	bufferInput->CalculatePower(weightMatrixRow/param->numRowPerSynapse, numInVector);
+	bufferOutput->CalculatePower(weightMatrixCol/param->numColPerSynapse*adderTree->numAdderBit, numInVector/param->numBitInput);
+	
+	busInput->CalculateLatency(weightMatrixRow/param->numRowPerSynapse*numInVector/(busInput->busWidth)); 
+	busInput->CalculatePower(busInput->busWidth, weightMatrixRow/param->numRowPerSynapse*numInVector/(busInput->busWidth));
+	
+	if (param->parallelRead) {
+		busOutput->CalculateLatency((weightMatrixCol/param->numColPerSynapse*log2((double)param->levelOutput)*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth));
+		busOutput->CalculatePower(busOutput->numRow*busOutput->busWidth, (weightMatrixCol/param->numColPerSynapse*log2((double)param->levelOutput)*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth));
+	} else {
+		busOutput->CalculateLatency((weightMatrixCol/param->numColPerSynapse*(log2((double)param->numRowSubArray)+param->cellBit-1)*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth));
+		busOutput->CalculatePower(busOutput->numRow*busOutput->busWidth, (weightMatrixCol/param->numColPerSynapse*(log2((double)param->numRowSubArray)+param->cellBit-1)*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth));
+	}
 
-	busInput->CalculateLatency(weightMatrixRow*numInVector/(busInput->busWidth)); 
-	busOutput->CalculateLatency((weightMatrixCol*adderTree->numAdderBit*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth)); 
-	
-	busInput->CalculatePower(busInput->busWidth, weightMatrixRow*numInVector/(busInput->busWidth));
-	busOutput->CalculatePower(busOutput->numRow*busOutput->busWidth, (weightMatrixCol*adderTree->numAdderBit*numInVector/param->numBitInput)/(busOutput->numRow*busOutput->busWidth));
-	
 	*bufferLatency += bufferInput->readLatency + bufferOutput->readLatency;
 	*icLatency += busInput->readLatency + busOutput->readLatency;
 	*bufferDynamicEnergy += bufferInput->readDynamicEnergy + bufferOutput->readDynamicEnergy;

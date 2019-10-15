@@ -616,7 +616,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				colDelay = horowitz(tau, beta, wlSwitchMatrix.rampOutput, &colRamp) * numReadPulse;
 
 				readLatency = 0;
-				readLatency += MAX(wlSwitchMatrix.readLatency, mux.readLatency+muxDecoder.readLatency);
+				readLatency += MAX(wlSwitchMatrix.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 				readLatency += precharger.readLatency;
 				readLatency += colDelay;
 				readLatency += multilevelSenseAmp.readLatency;
@@ -625,7 +625,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				
 				readLatencyADC = precharger.readLatency + colDelay + multilevelSenseAmp.readLatency + multilevelSAEncoder.readLatency;
 				readLatencyAccum = shiftAdd.readLatency;
-				readLatencyOther = MAX(wlSwitchMatrix.readLatency, mux.readLatency+muxDecoder.readLatency);
+				readLatencyOther = MAX(wlSwitchMatrix.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 
 				// Write (assume the average delay of pullup and pulldown inverter in SRAM cell)
 				/***
@@ -791,7 +791,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				
 				// Read
 				readLatency = 0;
-				readLatency += MAX(wlDecoder.readLatency + wlNewDecoderDriver.readLatency + wlDecoderDriver.readLatency, muxDecoder.readLatency + mux.readLatency);
+				readLatency += MAX(wlDecoder.readLatency + wlNewDecoderDriver.readLatency + wlDecoderDriver.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 				readLatency += multilevelSenseAmp.readLatency;
 				readLatency += multilevelSAEncoder.readLatency;
 				readLatency += adder.readLatency;
@@ -800,7 +800,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				
 				readLatencyADC = multilevelSenseAmp.readLatency + multilevelSAEncoder.readLatency;
 				readLatencyAccum = adder.readLatency + dff.readLatency + shiftAdd.readLatency;
-				readLatencyOther = MAX(wlDecoder.readLatency + wlNewDecoderDriver.readLatency + wlDecoderDriver.readLatency, muxDecoder.readLatency + mux.readLatency);
+				readLatencyOther = MAX(wlDecoder.readLatency + wlNewDecoderDriver.readLatency + wlDecoderDriver.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 				
 				// Write
 				/***
@@ -833,14 +833,14 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				
 				// Read
 				readLatency = 0;
-				readLatency += MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, muxDecoder.readLatency + mux.readLatency);
+				readLatency += MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 				readLatency += multilevelSenseAmp.readLatency;
 				readLatency += multilevelSAEncoder.readLatency;
 				readLatency += shiftAdd.readLatency;
 				
 				readLatencyADC = multilevelSenseAmp.readLatency + multilevelSAEncoder.readLatency;
 				readLatencyAccum = shiftAdd.readLatency;
-				readLatencyOther = MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, muxDecoder.readLatency + mux.readLatency);
+				readLatencyOther = MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 
 				// Write
 				/***
@@ -872,7 +872,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				
 				// Read
 				readLatency = 0;
-				readLatency += MAX(wlDecoder.readLatency + wlNewDecoderDriver.readLatency + wlDecoderDriver.readLatency, muxDecoder.readLatency + mux.readLatency);
+				readLatency += MAX(wlDecoder.readLatency + wlNewDecoderDriver.readLatency + wlDecoderDriver.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 				readLatency += rowCurrentSenseAmp.readLatency;
 				readLatency += adder.readLatency;
 				readLatency += dff.readLatency;
@@ -905,7 +905,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 
 				// Read
 				readLatency = 0;
-				readLatency += MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, muxDecoder.readLatency + mux.readLatency);
+				readLatency += MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 				readLatency += multilevelSenseAmp.readLatency;
 				readLatency += multilevelSAEncoder.readLatency;
 				
@@ -939,7 +939,7 @@ void SubArray::CalculateLatency(double columnRes, const vector<double> &columnRe
 				}
 				// Read
 				readLatency = 0;
-				readLatency += MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, muxDecoder.readLatency + mux.readLatency);
+				readLatency += MAX(wlNewSwitchMatrix.readLatency + wlSwitchMatrix.readLatency, (mux.readLatency+muxDecoder.readLatency)/numReadPulse);
 				readLatency += multilevelSenseAmp.readLatency;
 				readLatency += multilevelSAEncoder.readLatency;
 				readLatency += shiftAdd.readLatency;
@@ -1058,7 +1058,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 
 				readDynamicEnergyADC = precharger.readDynamicEnergy + readDynamicEnergyArray + multilevelSenseAmp.readDynamicEnergy + multilevelSAEncoder.readDynamicEnergy;
 				readDynamicEnergyAccum = shiftAdd.readDynamicEnergy;
-				readDynamicEnergyOther = wlSwitchMatrix.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
+				readDynamicEnergyOther = wlSwitchMatrix.readDynamicEnergy + (mux.readDynamicEnergy + muxDecoder.readDynamicEnergy)/numReadPulse;
 				
 				// Write
 				/***
@@ -1217,8 +1217,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += wlDecoder.readDynamicEnergy;
 				readDynamicEnergy += wlNewDecoderDriver.readDynamicEnergy;
 				readDynamicEnergy += wlDecoderDriver.readDynamicEnergy;
-				readDynamicEnergy += mux.readDynamicEnergy;
-				readDynamicEnergy += muxDecoder.readDynamicEnergy;
+				readDynamicEnergy += (mux.readDynamicEnergy + muxDecoder.readDynamicEnergy)/numReadPulse;
 				readDynamicEnergy += adder.readDynamicEnergy;
 				readDynamicEnergy += dff.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
@@ -1226,7 +1225,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				
 				readDynamicEnergyADC = readDynamicEnergyArray + multilevelSenseAmp.readDynamicEnergy + multilevelSAEncoder.readLatency;
 				readDynamicEnergyAccum = adder.readDynamicEnergy + dff.readDynamicEnergy + shiftAdd.readDynamicEnergy;
-				readDynamicEnergyOther = wlDecoder.readDynamicEnergy + wlNewDecoderDriver.readDynamicEnergy + wlDecoderDriver.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
+				readDynamicEnergyOther = wlDecoder.readDynamicEnergy + wlNewDecoderDriver.readDynamicEnergy + wlDecoderDriver.readDynamicEnergy + (mux.readDynamicEnergy + muxDecoder.readDynamicEnergy)/numReadPulse;
 
 				// Write
 				/***
@@ -1280,8 +1279,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy = 0;
 				readDynamicEnergy += wlNewSwitchMatrix.readDynamicEnergy;
 				readDynamicEnergy += wlSwitchMatrix.readDynamicEnergy;
-				readDynamicEnergy += mux.readDynamicEnergy;
-				readDynamicEnergy += muxDecoder.readDynamicEnergy;
+				readDynamicEnergy += (mux.readDynamicEnergy + muxDecoder.readDynamicEnergy)/numReadPulse;
 				readDynamicEnergy += multilevelSenseAmp.readDynamicEnergy;
 				readDynamicEnergy += multilevelSAEncoder.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
@@ -1289,7 +1287,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				
 				readDynamicEnergyADC = readDynamicEnergyArray + multilevelSenseAmp.readDynamicEnergy + multilevelSAEncoder.readDynamicEnergy;
 				readDynamicEnergyAccum = shiftAdd.readDynamicEnergy;
-				readDynamicEnergyOther = wlNewSwitchMatrix.readDynamicEnergy + wlSwitchMatrix.readDynamicEnergy + mux.readDynamicEnergy + muxDecoder.readDynamicEnergy;
+				readDynamicEnergyOther = wlNewSwitchMatrix.readDynamicEnergy + wlSwitchMatrix.readDynamicEnergy + (mux.readDynamicEnergy + muxDecoder.readDynamicEnergy)/numReadPulse;
 				
 				// Write
 				/***
@@ -1340,8 +1338,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy += wlDecoder.readDynamicEnergy;
 				readDynamicEnergy += wlNewDecoderDriver.readDynamicEnergy;
 				readDynamicEnergy += wlDecoderDriver.readDynamicEnergy;
-				readDynamicEnergy += mux.readDynamicEnergy;
-				readDynamicEnergy += muxDecoder.readDynamicEnergy;
+				readDynamicEnergy += (mux.readDynamicEnergy + muxDecoder.readDynamicEnergy)/numReadPulse;
 				readDynamicEnergy += rowCurrentSenseAmp.readDynamicEnergy;
 				readDynamicEnergy += adder.readDynamicEnergy;
 				readDynamicEnergy += dff.readDynamicEnergy;
@@ -1395,8 +1392,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy = 0;
 				readDynamicEnergy += wlNewSwitchMatrix.readDynamicEnergy;
 				readDynamicEnergy += wlSwitchMatrix.readDynamicEnergy;
-				readDynamicEnergy += mux.readDynamicEnergy;
-				readDynamicEnergy += muxDecoder.readDynamicEnergy;
+				readDynamicEnergy += (mux.readDynamicEnergy + muxDecoder.readDynamicEnergy)/numReadPulse;
 				readDynamicEnergy += multilevelSenseAmp.readDynamicEnergy;
 				readDynamicEnergy += multilevelSAEncoder.readDynamicEnergy;
 				readDynamicEnergy += readDynamicEnergyArray;
@@ -1448,8 +1444,7 @@ void SubArray::CalculatePower(const vector<double> &columnResistance) {
 				readDynamicEnergy = 0;
 				readDynamicEnergy += wlNewSwitchMatrix.readDynamicEnergy;
 				readDynamicEnergy += wlSwitchMatrix.readDynamicEnergy;
-				readDynamicEnergy += mux.readDynamicEnergy;
-				readDynamicEnergy += muxDecoder.readDynamicEnergy;
+				readDynamicEnergy += (mux.readDynamicEnergy + muxDecoder.readDynamicEnergy)/numReadPulse;
 				readDynamicEnergy += multilevelSenseAmp.readDynamicEnergy;
 				readDynamicEnergy += multilevelSAEncoder.readDynamicEnergy;
 				readDynamicEnergy += shiftAdd.readDynamicEnergy;
