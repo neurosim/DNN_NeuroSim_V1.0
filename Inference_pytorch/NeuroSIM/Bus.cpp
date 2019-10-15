@@ -102,9 +102,9 @@ void Bus::Initialize(BusMode _mode, int _numRow, int _numCol, double _delaytoler
 	widthInvP = repeaterSize * tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize;
 	
 	if (mode == HORIZONTAL) {
-		wireLength = unitWidth*numCol;
+		wireLength = unitWidth*(numCol-1);
 	} else {
-		wireLength = unitHeight*numRow;
+		wireLength = unitHeight*(numRow-1);
 	}
 	
 	initialized = true;
