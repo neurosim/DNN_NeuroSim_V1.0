@@ -151,15 +151,20 @@ vector<double> TileCalculateArea(double numPE, double peSize, double *height, do
 	double PEareaAccum = peAreaResults[2];
 	double PEareaOther = peAreaResults[3];
 	
+	double areareLu = 0;
+	double areasigmoid = 0;
+	
 	accumulation->CalculateArea(NULL, ceil(sqrt((double)numPE))*PEwidth, NONE);
 	if (!param->chipActivation) {
 		if (param->reLu) {
 			reLu->CalculateArea(NULL, ceil(sqrt((double)numPE))*PEwidth, NONE);
 			area += reLu->area;
+			areareLu += reLu->area;
 		} else {
 			sigmoid->CalculateUnitArea(NONE);
 			sigmoid->CalculateArea(NULL, ceil(sqrt((double)numPE))*PEwidth, NONE);
 			area += sigmoid->area;
+			areasigmoid += sigmoid->area;
 		}
 	}
 	inputBuffer->CalculateArea(ceil(sqrt((double)numPE))*PEheight, NULL, NONE);
@@ -175,7 +180,7 @@ vector<double> TileCalculateArea(double numPE, double peSize, double *height, do
 	areaResults.push_back(hTree->area);
 	areaResults.push_back(PEareaADC*numPE);
 	areaResults.push_back(PEareaAccum*numPE + accumulation->area);
-	areaResults.push_back(PEareaOther*numPE + inputBuffer->area + outputBuffer->area + hTree->area);
+	areaResults.push_back(PEareaOther*numPE + inputBuffer->area + outputBuffer->area + hTree->area +  + areareLu + areasigmoid);
 
 	return areaResults;
 }
@@ -390,7 +395,7 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 		
 		*coreLatencyOther += (inputBuffer->readLatency + inputBuffer->writeLatency + outputBuffer->readLatency + outputBuffer->writeLatency + hTree->readLatency);
 		*coreEnergyOther += inputBuffer->readDynamicEnergy + inputBuffer->writeDynamicEnergy + outputBuffer->readDynamicEnergy + outputBuffer->writeDynamicEnergy + hTree->readDynamicEnergy;
-		
+		*leakage = PEleakage*numPE*numPE + accumulation->leakage + inputBuffer->leakage + outputBuffer->leakage;
 	} else {  // novel Mapping
 		for (int i=0; i<numPE; i++) {
 			if (i*peSize < weightMatrixRow) {
@@ -490,8 +495,9 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 		
 		*coreLatencyOther += (inputBuffer->readLatency + inputBuffer->writeLatency + outputBuffer->readLatency + outputBuffer->writeLatency + hTree->readLatency);
 		*coreEnergyOther += inputBuffer->readDynamicEnergy + inputBuffer->writeDynamicEnergy + outputBuffer->readDynamicEnergy + outputBuffer->writeDynamicEnergy + hTree->readDynamicEnergy;
+		*leakage = PEleakage*numPE + accumulation->leakage + inputBuffer->leakage + outputBuffer->leakage;																							
 	}
-	*leakage = PEleakage*numPE*numPE + accumulation->leakage + inputBuffer->leakage + outputBuffer->leakage;
+	
 }
 
 
