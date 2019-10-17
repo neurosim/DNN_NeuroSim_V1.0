@@ -151,8 +151,8 @@ Param::Param() {
 	conventionalSequential = 0;
 	BNNparallelMode = 0;                // parallel BNN
 	BNNsequentialMode = 0;              // sequential BNN
-	conventionalParallel = 0;           // Use several multi-bit RRAM as one synapse
-	conventionalSequential = 0;         // Use several multi-bit RRAM as one synapse
+	XNORparallelMode = 0;           	// parallel XNOR
+	XNORsequentialMode = 0;         	// sequential XNOR
 	switch(operationmode) {
 		case 6:	    XNORparallelMode = 1;               break;     
 		case 5:	    XNORsequentialMode = 1;             break;     
