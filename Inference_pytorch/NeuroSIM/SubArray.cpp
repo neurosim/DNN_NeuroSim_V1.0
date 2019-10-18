@@ -354,9 +354,9 @@ void SubArray::CalculateArea() {  //calculate layout area for total design
 					shiftAdd.CalculateArea(NULL, widthArray, NONE);
 				}
 				height = precharger.height + sramWriteDriver.height + heightArray + multilevelSenseAmp.height + multilevelSAEncoder.height + shiftAdd.height + mux.height;
-				width = MAX(wlDecoder.width, muxDecoder.width) + widthArray;
+				width = MAX(wlSwitchMatrix.width, muxDecoder.width) + widthArray;
 				area = height * width;
-				usedArea = areaArray + wlDecoder.area + precharger.area + sramWriteDriver.area + multilevelSenseAmp.area + multilevelSAEncoder.area + shiftAdd.area + mux.height + muxDecoder.height;
+				usedArea = areaArray + wlSwitchMatrix.area + precharger.area + sramWriteDriver.area + multilevelSenseAmp.area + multilevelSAEncoder.area + shiftAdd.area + mux.area + muxDecoder.area;
 				emptyArea = area - usedArea;
 				
 				areaADC = multilevelSenseAmp.area + precharger.area + multilevelSAEncoder.area;
