@@ -285,6 +285,8 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 				*coreLatencyADC /= (speedUpRow*speedUpCol);
 				*coreLatencyAccum /= (speedUpRow*speedUpCol);
 				*coreLatencyOther /= (speedUpRow*speedUpCol);
+				*bufferLatency /= (speedUpRow*speedUpCol);
+				*icLatency /= (speedUpRow*speedUpCol);
 				
 				// whether go through accumulation?
 				if (ceil((double)weightMatrixRow/(double)peSize) > 1) {
@@ -428,6 +430,8 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 		*coreLatencyADC /= (speedUpRow*speedUpCol);
 		*coreLatencyAccum /= (speedUpRow*speedUpCol);
 		*coreLatencyOther /= (speedUpRow*speedUpCol);
+		*bufferLatency /= (speedUpRow*speedUpCol);
+		*icLatency /= (speedUpRow*speedUpCol);
 		
 		accumulation->CalculateLatency(param->numColMuxed, numPE, 0);
 		accumulation->CalculatePower(param->numColMuxed, numPE);
