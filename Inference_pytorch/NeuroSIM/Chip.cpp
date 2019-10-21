@@ -1000,7 +1000,7 @@ vector<vector<double> > LoadInWeightData(const string &weightfile, int numRowPer
 	
 	
 	double NormalizedMin = 0;
-	double NormalizedMax = pow(2, param->synapseBit)-1;
+	double NormalizedMax = pow(2, param->synapseBit);
 	
 	double RealMax = param->algoWeightMax;
 	double RealMin = param->algoWeightMin;
