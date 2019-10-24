@@ -182,10 +182,12 @@ void SubArray::Initialize(int _numRow, int _numCol, double _unitWireRes){  //ini
     } else if (cell.memCellType == Type::RRAM || cell.memCellType == Type::FeFET) {
 		if (cell.accessType == CMOS_access) {	// 1T1R
 			cell.resCellAccess = cell.resistanceOn * IR_DROP_TOLERANCE;    //calculate access CMOS resistance
-			cell.widthAccessCMOS = CalculateOnResistance(tech.featureSize, NMOS, inputParameter.temperature, tech) / cell.resCellAccess;   //get access CMOS width
+			cell.widthAccessCMOS = CalculateOnResistance(tech.featureSize, NMOS, inputParameter.temperature, tech) * IR_DROP_TOLERANCE / cell.resCellAccess;   //get access CMOS width
 			if (cell.widthAccessCMOS > cell.widthInFeatureSize) {	// Place transistor vertically
 				printf("Transistor width of 1T1R=%.2fF is larger than the assigned cell width=%.2fF in layout\n", cell.widthAccessCMOS, cell.widthInFeatureSize);
 				exit(-1);
+			} else {
+				cell.widthAccessCMOS = MAX(cell.widthAccessCMOS, cell.widthInFeatureSize);
 			}
 
 			cell.resMemCellOn = cell.resCellAccess + cell.resistanceOn;        //calculate single memory cell resistance_ON
