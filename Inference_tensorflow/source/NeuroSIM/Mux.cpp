@@ -68,6 +68,8 @@ void Mux::Initialize(int _numInput, int _numSelection, double _resTg, bool _FPGA
 								* tech.featureSize / (resTg*2);
 		widthTgP = CalculateOnResistance(tech.featureSize, PMOS, inputParameter.temperature, tech)
 								* tech.featureSize / (resTg*2);
+		widthTgN = MAX(MIN_NMOS_SIZE * tech.featureSize, widthTgN);
+		widthTgP = MAX(tech.pnSizeRatio * MIN_NMOS_SIZE * tech.featureSize, widthTgP);
 	}
 	initialized = true;
 }
