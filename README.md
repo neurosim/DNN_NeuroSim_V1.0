@@ -4,6 +4,8 @@ The DNN+NeuroSim framework was developed by [Prof. Shimeng Yu's group](https://s
 
 This is the released version 1.0 (June 1st, 2019) for the tool, and this version is an integrated framework developed in C++ and wrapped by Pytorch and Tensorflow, it supports **_digital SRAM, eNVM (STT-MRAM, RRAM and PCM) and FeFET_** based architectures, for deep neural networks (DNNs) inference performance estimation.
 
+**_For estimation with new features (e.g. pipeline system, ADC quantization effects, conductance variation, etc), please visit released V1.1 [DNN+NeuroSim V1.1](https://github.com/neurosim/DNN-NeuroSim-V1.1) _**
+
 In Pytorch/Tensorflow wrapper, users are able to define **_network structures, precision of synaptic weight and neural activation_**. With the integrated NeuroSim which takes real traces from wrapper, the framework can support hierarchical organization from device level to circuit level, to chip level and to algorithm level, enabling **_instruction-accurate evaluation on both accuracy and hardware performance of inference_**.
 
 Developers: Xiaochen Peng, Shanshi Huang.
