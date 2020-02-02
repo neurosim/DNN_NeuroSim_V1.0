@@ -99,15 +99,20 @@ void MultilevelSenseAmp::CalculateArea(double heightArray, double widthArray, Ar
 		if (widthArray && _option==NONE) {
 			currentSenseAmp.CalculateUnitArea();
 			currentSenseAmp.CalculateArea(widthArray);
+			area = currentSenseAmp.area;
+			width = widthArray;
+			height = area / width;
+		} else if (heightArray && _option==NONE) {
+			currentSenseAmp.CalculateUnitArea();
+			currentSenseAmp.CalculateArea(heightArray);
+			area = currentSenseAmp.area;
+			height = heightArray;
+			width = area / height;
 		} else {
-			cout << "[MultilevelSenseAmp] Error: No width assigned for the multiSenseAmp circuit" << endl;
+			cout << "[MultilevelSenseAmp] Error: No width or height assigned for the multiSenseAmp circuit" << endl;
 			exit(-1);
 		}
-		
 		// Assume the Current Mirrors are on the same row and the total width of them is smaller than the adder or DFF
-		area = currentSenseAmp.area;
-		width = widthArray;
-		height = area / width;
 		
 		// Modify layout
 		newHeight = heightArray;
@@ -135,7 +140,11 @@ void MultilevelSenseAmp::CalculateLatency(const vector<double> &columnResistance
 		for (double j=0; j<columnResistance.size(); j++){
 			double T_Col = 0;
 			T_Col = GetColumnLatency(columnResistance[j]);
-			LatencyCol = max(LatencyCol, T_Col);
+			if (columnResistance[j] == columnResistance[j]) {
+				LatencyCol = max(LatencyCol, T_Col);
+			} else {
+				LatencyCol = LatencyCol;
+			}
 			if (LatencyCol < 1e-9) {
 				LatencyCol = 1e-9;
 			} else if (LatencyCol > 10e-9) {
@@ -154,10 +163,15 @@ void MultilevelSenseAmp::CalculatePower(const vector<double> &columnResistance, 
 		leakage = 0;
 		readDynamicEnergy = 0;
 		for (double i=0; i<columnResistance.size(); i++) {
-			double P_Col = 0, T_Col = 0;
+			double P_Col = 0;
+			double T_Col = 0;
 			T_Col = GetColumnLatency(columnResistance[i]);
 			P_Col = GetColumnPower(columnResistance[i]);
-			readDynamicEnergy += T_Col*P_Col;
+			if (columnResistance[i] == columnResistance[i]) {
+				readDynamicEnergy += T_Col*P_Col;
+			} else {
+				readDynamicEnergy += 0;
+			}
 		}
 		readDynamicEnergy *= numRead;
 	}
