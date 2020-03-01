@@ -168,7 +168,7 @@ void MultilevelSenseAmp::CalculatePower(const vector<double> &columnResistance, 
 			T_Col = GetColumnLatency(columnResistance[i]);
 			P_Col = GetColumnPower(columnResistance[i]);
 			if (columnResistance[i] == columnResistance[i]) {
-				readDynamicEnergy += T_Col*P_Col;
+				readDynamicEnergy += T_Col*P_Col*levelOutput;
 			} else {
 				readDynamicEnergy += 0;
 			}
