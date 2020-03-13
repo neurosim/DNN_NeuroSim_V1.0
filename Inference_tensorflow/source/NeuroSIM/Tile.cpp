@@ -400,17 +400,16 @@ void TileCalculatePerformance(const vector<vector<double> > &newMemory, const ve
 		*leakage = PEleakage*numPE*numPE + accumulation->leakage + inputBuffer->leakage + outputBuffer->leakage;
 	} else {  // novel Mapping
 		for (int i=0; i<numPE; i++) {
-			if (i*peSize < weightMatrixRow) {
-				vector<vector<double> > pEMemory;
-				pEMemory = CopyPEArray(newMemory, i*peSize, 0, weightMatrixRow/numPE, weightMatrixCol);
-				vector<vector<double> > pEInput;
-				pEInput = CopyPEInput(inputVector, i*peSize, numInVector, weightMatrixRow/numPE);
+			int location = i*MIN(peSize, (int) weightMatrixRow/numPE);
+			vector<vector<double> > pEMemory;
+			pEMemory = CopyPEArray(newMemory, location, 0, weightMatrixRow/numPE, weightMatrixCol);
+			vector<vector<double> > pEInput;
+			pEInput = CopyPEInput(inputVector, location, numInVector, weightMatrixRow/numPE);
 					
-				ProcessingUnitCalculatePerformance(subArrayInPE, pEMemory, pEMemory, pEInput, 1, 1, numSubArrayRow, numSubArrayCol, weightMatrixRow/numPE,
-										weightMatrixCol, numInVector, cell, &PEreadLatency, &PEreadDynamicEnergy, &PEleakage,
-										&PEbufferLatency, &PEbufferDynamicEnergy, &PEicLatency, &PEicDynamicEnergy, 
-										&peLatencyADC, &peLatencyAccum, &peLatencyOther, &peEnergyADC, &peEnergyAccum, &peEnergyOther);
-			}
+			ProcessingUnitCalculatePerformance(subArrayInPE, pEMemory, pEMemory, pEInput, 1, 1, numSubArrayRow, numSubArrayCol, weightMatrixRow/numPE,
+									weightMatrixCol, numInVector, cell, &PEreadLatency, &PEreadDynamicEnergy, &PEleakage,
+									&PEbufferLatency, &PEbufferDynamicEnergy, &PEicLatency, &PEicDynamicEnergy, 
+									&peLatencyADC, &peLatencyAccum, &peLatencyOther, &peEnergyADC, &peEnergyAccum, &peEnergyOther);
 			*readLatency = max(PEreadLatency, (*readLatency));
 			*readDynamicEnergy += PEreadDynamicEnergy;
 			*bufferLatency = max(PEbufferLatency, (*bufferLatency));
