@@ -6,6 +6,8 @@ This is the released version 1.0 (June 1st, 2019) for the tool, and this version
 
 **_For estimation with new features (e.g. pipeline system, ADC quantization effects, conductance variation, etc), please visit released V1.1 [DNN+NeuroSim V1.1](https://github.com/neurosim/DNN_NeuroSim_V1.1)_**
 
+**_For estimation of on-chip training accelerators, please visit released V2.0 [DNN+NeuroSim V2.0](https://github.com/neurosim/DNN_NeuroSim_V2.0)_**
+
 In Pytorch/Tensorflow wrapper, users are able to define **_network structures, precision of synaptic weight and neural activation_**. With the integrated NeuroSim which takes real traces from wrapper, the framework can support hierarchical organization from device level to circuit level, to chip level and to algorithm level, enabling **_instruction-accurate evaluation on both accuracy and hardware performance of inference_**.
 
 Developers: Xiaochen Peng, Shanshi Huang.
