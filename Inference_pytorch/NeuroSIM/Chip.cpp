@@ -667,23 +667,26 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 				double tileEnergyAccum = 0;
 				double tileEnergyOther = 0;
 				
-				int numRowMatrix = min(desiredPESizeNM*ceil(sqrt((double)numPENM)), weightMatrixRow-i*desiredPESizeNM*ceil(sqrt((double)numPENM)));
-				int numColMatrix = min(desiredPESizeNM*ceil(sqrt((double)numPENM)), weightMatrixCol-j*desiredTileSizeCM);
+				// novel mapping
+				int numtileEachLayerRow = ceil((double) netStructure[l][2]*(double) numRowPerSynapse/(double) desiredPESizeNM);
+				int numtileEachLayerCol = ceil((double) netStructure[l][5]*(double) numColPerSynapse/(double) desiredPESizeNM);
+				
+				int numRowMatrix = min(desiredPESizeNM*numPENM, weightMatrixRow-i*desiredPESizeNM*numPENM);
+				int numColMatrix = min(desiredPESizeNM, weightMatrixCol-j*desiredPESizeNM);
 				
 				// assign weight and input to specific tile
 				vector<vector<double> > tileMemory;
-				tileMemory = ReshapeArray(newMemory, i*desiredPESizeNM, j*desiredPESizeNM, (int) netStructure[l][2]*numRowPerSynapse/numTileEachLayer[0][l], 
-									(int) netStructure[l][5]*numRowPerSynapse/numTileEachLayer[1][l], numPENM, (int) netStructure[l][2]*numRowPerSynapse);
+				tileMemory = ReshapeArray(newMemory, i*desiredPESizeNM, j*desiredPESizeNM, (int) netStructure[l][2]*numRowPerSynapse/numtileEachLayerRow, 
+									(int) netStructure[l][5]*numColPerSynapse/numtileEachLayerCol, numPENM, (int) netStructure[l][2]*numRowPerSynapse);
 
 				vector<vector<double> > tileInput;
 				tileInput = ReshapeInput(inputVector, i*desiredPESizeNM, (int) (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, 
-									(int) netStructure[l][2]*numRowPerSynapse/numTileEachLayer[0][l], numPENM, (int) netStructure[l][2]*numRowPerSynapse);
-				
+									(int) netStructure[l][2]*numRowPerSynapse/numtileEachLayerRow, numPENM, (int) netStructure[l][2]*numRowPerSynapse);
+	
 				TileCalculatePerformance(tileMemory, tileMemory, tileInput, markNM[l], numPENM, desiredPESizeNM, speedUpEachLayer[0][l], speedUpEachLayer[1][l],
-									numRowMatrix, numColMatrix, (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1)*param->numBitInput, cell, 
+									numRowMatrix, numColMatrix, numInVector*param->numBitInput, cell, 
 									&tileReadLatency, &tileReadDynamicEnergy, &tileLeakage, &tilebufferLatency, &tilebufferDynamicEnergy, &tileicLatency, &tileicDynamicEnergy,
 									&tileLatencyADC, &tileLatencyAccum, &tileLatencyOther, &tileEnergyADC, &tileEnergyAccum, &tileEnergyOther);
-				
 				
 				*readLatency = max(tileReadLatency, (*readLatency));
 				*readDynamicEnergy += tileReadDynamicEnergy;
