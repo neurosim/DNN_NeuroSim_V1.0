@@ -538,6 +538,7 @@ double ChipCalculatePerformance(MemCell& cell, int layerNumber, const string &ne
 	*coreLatencyOther = 0;
 	
 	double tileLeakage = 0;
+	int numInVector = (netStructure[l][0]-netStructure[l][3]+1)*(netStructure[l][1]-netStructure[l][4]+1);
 	
 	if (markNM[l] == 0) {   // conventional mapping
 		for (int i=0; i<numTileEachLayer[0][l]; i++) {       // # of tiles in row
