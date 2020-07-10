@@ -548,8 +548,9 @@ vector<double> GetColumnResistance(const vector<double> &input, const vector<vec
 				
 			} else if (cell.memCellType == Type::SRAM) {	
 				// SRAM: weight value do not affect sense energy --> read energy calculated in subArray.cpp (based on wireRes wireCap etc)
+				double totalWireResistance = (double) (resCellAccess + param->wireResistanceCol);
 				if ((int) input[i] == 1) {
-					columnG += (double) 1.0/resCellAccess + (double) 1.0/param->wireResistanceCol;
+					columnG += (double) 1.0/totalWireResistance;
 					activatedRow += 1 ;
 				} else {
 					columnG += (double) 1.0/param->wireResistanceCol;
